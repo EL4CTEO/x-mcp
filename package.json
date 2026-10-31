@@ -1,5 +1,5 @@
 {
-  "name": "x-mcp",
+  "name": "@el4cteo/x-mcp",
   "version": "1.0.0",
   "description": "MCP server for X (Twitter): 10 grouped tools with 69 actions for posts, timelines, users, Lists, Spaces, trends, DMs and media, including image viewing and video frame extraction.",
   "type": "module",

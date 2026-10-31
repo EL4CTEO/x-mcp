@@ -31,7 +31,14 @@ Add it to your MCP client (Claude Desktop, Cursor, Codex, custom agents):
 }
 ```
 
-Once published to npm: `{ "command": "npx", "args": ["-y", "x-mcp"] }`.
+Once published to npm: `{ "command": "npx", "args": ["-y", "@el4cteo/x-mcp"] }`.
+
+Or install the CLI globally:
+
+```bash
+npm install -g @el4cteo/x-mcp
+x-mcp
+```
 
 ## Sign in
 
