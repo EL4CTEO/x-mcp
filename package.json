@@ -1,0 +1,71 @@
+{
+  "name": "x-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for X (Twitter): 10 grouped tools with 69 actions for posts, timelines, users, Lists, Spaces, trends, DMs and media, including image viewing and video frame extraction.",
+  "type": "module",
+  "license": "MIT",
+  "author": "EL4CTEO",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EL4CTEO/x-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EL4CTEO/x-mcp/issues"
+  },
+  "homepage": "https://github.com/EL4CTEO/x-mcp#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "bin": {
+    "x-mcp": "./dist/index.mjs"
+  },
+  "main": "./dist/index.mjs",
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE",
+    ".env.example"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "x",
+    "twitter",
+    "ai",
+    "agents",
+    "llm"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "dev": "node --watch src/index.ts",
+    "start": "node dist/index.mjs",
+    "auth": "node dist/index.mjs auth",
+    "doctor": "node dist/index.mjs doctor",
+    "test": "vitest run --configLoader native --pool=threads",
+    "test:watch": "vitest --configLoader native --pool=threads",
+    "test:coverage": "vitest run --configLoader native --pool=threads --coverage",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "prepublishOnly": "npm run check"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "pino": "10.4.0",
+    "undici": "8.12.3",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.0.5",
+    "tsdown": "0.23.4",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}
