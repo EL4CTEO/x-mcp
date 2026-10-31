@@ -58,6 +58,30 @@ describe('AuthManager token lifecycle', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('persists rotated refresh tokens for environment-only sessions', async () => {
+    const home = tempHome();
+    const config = loadConfig({
+      X_MCP_HOME: home,
+      X_OAUTH2_CLIENT_ID: 'client',
+      X_OAUTH2_ACCESS_TOKEN: 'env-access',
+      X_OAUTH2_REFRESH_TOKEN: 'env-refresh',
+    } as NodeJS.ProcessEnv);
+    const manager = new AuthManager(config, logger);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(JSON.stringify({ access_token: 'rotated', refresh_token: 'rotated-refresh', expires_in: 7_200 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      ),
+    );
+    await expect(manager.getOAuth2AccessToken({ forceRefresh: true })).resolves.toBe('rotated');
+    const stored = JSON.parse(fs.readFileSync(config.credentialFile, 'utf8'));
+    expect(stored.oauth2.accessToken).toBe('rotated');
+    expect(stored.oauth2.refreshToken).toBe('rotated-refresh');
+  });
+
   it('shares one refresh across concurrent callers', async () => {
     const home = tempHome();
     writeCredentials(home, {

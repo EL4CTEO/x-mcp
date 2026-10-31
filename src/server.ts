@@ -61,7 +61,7 @@ MEDIA
  */
 export function createRuntime(config: Config, logger: Logger, auth?: AuthManager): Runtime {
   const x = new XClient(config, logger, auth);
-  const media = new MediaUploader(x, logger);
+  const media = new MediaUploader(x, logger, config);
   const viewer = new MediaViewer(config, logger);
   return {
     config,

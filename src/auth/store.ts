@@ -4,6 +4,7 @@ import type { Logger } from '../logger.ts';
 
 export interface StoredOAuth2 {
   clientId: string;
+  clientSecret?: string;
   accessToken: string;
   refreshToken?: string;
   expiresAt?: number;

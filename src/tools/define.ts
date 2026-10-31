@@ -85,6 +85,22 @@ export function truncate(text: string, maxChars: number): string {
   return text.slice(0, maxChars) + TRUNCATION_NOTICE(text.length - maxChars);
 }
 
+/** Serialises to valid JSON even when the payload is too large for the text channel. */
+function jsonText(value: unknown, maxChars: number): string {
+  const text = JSON.stringify(value ?? null, null, 2);
+  if (text.length <= maxChars) return text;
+  return JSON.stringify(
+    {
+      truncated: true,
+      original_chars: text.length,
+      preview: text.slice(0, maxChars),
+      note: 'Text preview truncated; structuredContent contains the full result.',
+    },
+    null,
+    2,
+  );
+}
+
 export function structuredContent(output: unknown): Record<string, unknown> {
   if (Array.isArray(output)) return { items: output };
   if (output !== null && typeof output === 'object') return output as Record<string, unknown>;
@@ -92,7 +108,7 @@ export function structuredContent(output: unknown): Record<string, unknown> {
 }
 
 export function okResult(output: unknown, config: Config): CallToolResult {
-  const text = truncate(JSON.stringify(output, null, 2), config.maxOutputChars);
+  const text = jsonText(output, config.maxOutputChars);
   return {
     content: [{ type: 'text', text }],
     structuredContent: structuredContent(output),
@@ -126,7 +142,7 @@ export function errorResult(error: unknown, config: Config): CallToolResult {
   const payload = errorPayload(error);
   return {
     isError: true,
-    content: [{ type: 'text', text: truncate(JSON.stringify(payload, null, 2), config.maxOutputChars) }],
+    content: [{ type: 'text', text: jsonText(payload, config.maxOutputChars) }],
     structuredContent: payload,
   };
 }
@@ -140,10 +156,7 @@ function renderOutput(output: unknown, config: Config): CallToolResult {
   if (isRichOutput(output)) {
     const structured = output.structuredContent ?? {};
     return {
-      content: [
-        { type: 'text', text: truncate(JSON.stringify(structured, null, 2), config.maxOutputChars) },
-        ...output.content,
-      ],
+      content: [{ type: 'text', text: jsonText(structured, config.maxOutputChars) }, ...output.content],
       structuredContent: structured,
     };
   }
@@ -235,6 +248,12 @@ export async function runAction(
   }
 }
 
+function requiredFields(shape: z.ZodRawShape): string[] {
+  return Object.entries(shape)
+    .filter(([, schema]) => !(schema as unknown as z.ZodTypeAny).safeParse(undefined).success)
+    .map(([key]) => key);
+}
+
 export function registerToolGroup(server: McpServer, group: ToolGroup, ctx: ToolContext): void {
   const byAction = new Map(group.actions.map((action) => [action.action, action]));
 
@@ -253,6 +272,7 @@ export function registerToolGroup(server: McpServer, group: ToolGroup, ctx: Tool
               readOnly: action.annotations.readOnlyHint === true,
               destructive: action.annotations.destructiveHint === true,
               idempotent: action.annotations.idempotentHint === true,
+              required: requiredFields(action.inputSchema),
             },
           ]),
         ),

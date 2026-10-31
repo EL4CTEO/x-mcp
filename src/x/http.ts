@@ -36,8 +36,6 @@ export interface HttpTransportOptions {
   logger: Logger;
 }
 
-const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
-
 export class HttpTransport {
   private readonly dispatcher: Dispatcher;
   private readonly options: HttpTransportOptions;
@@ -100,10 +98,12 @@ export class HttpTransport {
         throw new XNetworkError(`Failed reading the X response body: ${errorMessage(error)}`, error, request.idempotent);
       }
 
+      const serverError = response.status >= 500 && response.status <= 599;
       const retryableStatus =
-        RETRYABLE_STATUS.has(response.status) &&
-        (response.status !== 429 || retryOn429) &&
-        attempt <= maxRetries;
+        attempt <= maxRetries &&
+        (response.status === 429
+          ? retryOn429
+          : response.status === 408 || (request.idempotent && (serverError || response.status === 425)));
 
       if (response.ok || !retryableStatus) {
         const durationMs = Date.now() - startedAt;
@@ -121,7 +121,7 @@ export class HttpTransport {
         return { status: response.status, headers: response.headers, text, attempts: attempt, durationMs };
       }
 
-      const delay = retryDelay(response.headers, attempt, this.options.retryBaseMs);
+      const delay = retryDelay(response.status, response.headers, attempt, this.options.retryBaseMs);
       if (delay > (request.maxRetryDelayMs ?? this.maxRetryDelayMs)) {
         return {
           status: response.status,
@@ -175,7 +175,11 @@ function parseRetryAfter(headers: Headers): number | undefined {
   return Number.isNaN(date) ? undefined : Math.max(0, date - Date.now());
 }
 
-function retryDelay(headers: Headers, attempt: number, baseMs: number): number {
+function retryDelay(status: number, headers: Headers, attempt: number, baseMs: number): number {
+  // Only 429 responses carry rate-limit windows that are meaningful here.
+  // A 5xx must use exponential backoff, even if stale reset headers are present.
+  if (status !== 429) return backoff(attempt, baseMs);
+
   const after = parseRetryAfter(headers);
   if (after !== undefined) return Math.min(after, 15 * 60_000);
 

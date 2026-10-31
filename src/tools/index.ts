@@ -142,11 +142,20 @@ function buildGroup(toolset: Toolset): ToolGroup {
     seen.add(action.action);
   }
 
-  const list = actions.map((action) => `- ${action.action}: ${firstSentence(action.description)}`).join('\n');
+  const list = actions
+    .map((action) => {
+      const required = Object.entries(action.inputSchema)
+        .filter(([, schema]) => !(schema as unknown as z.ZodTypeAny).safeParse(undefined).success)
+        .map(([key]) => key);
+      const needs = required.length > 0 ? ` [requires: ${required.join(', ')}]` : '';
+      return `- ${action.action}: ${firstSentence(action.description)}${needs}`;
+    })
+    .join('\n');
   const description = `${meta.description}\n\nActions (pass "action" plus that action's parameters):\n${list}`;
 
   const annotations: ToolAnnotations = {
     readOnlyHint: actions.every((action) => action.annotations.readOnlyHint === true),
+    destructiveHint: actions.some((action) => action.annotations.destructiveHint === true),
     openWorldHint: true,
     idempotentHint: actions.every((action) => action.annotations.idempotentHint !== false),
   };

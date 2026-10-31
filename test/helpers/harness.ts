@@ -36,6 +36,7 @@ export interface TestConfigOptions {
   toolsets?: string;
   disableToolsets?: string;
   allowPrivateMedia?: boolean;
+  httpToken?: string;
 }
 
 export function testConfig(options: TestConfigOptions = {}): Config {
@@ -67,6 +68,7 @@ export function testConfig(options: TestConfigOptions = {}): Config {
   if (options.readOnly) env.X_MCP_READ_ONLY = 'true';
   if (options.dryRun) env.X_MCP_DRY_RUN = 'true';
   if (options.allowPrivateMedia) env.X_MCP_MEDIA_ALLOW_PRIVATE = 'true';
+  if (options.httpToken) env.X_MCP_HTTP_TOKEN = options.httpToken;
   if (options.toolsets) env.X_MCP_TOOLSETS = options.toolsets;
   if (options.disableToolsets) env.X_MCP_DISABLE_TOOLSETS = options.disableToolsets;
   return loadConfig(env);

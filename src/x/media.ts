@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import net from 'node:net';
 import dns from 'node:dns/promises';
+import type { Config } from '../config.ts';
 import type { Logger } from '../logger.ts';
 import type { XClient } from './client.ts';
 import { XApiError } from './errors.ts';
@@ -72,6 +73,7 @@ export function inferMediaType(filename: string | undefined, provided?: string):
 
 export function inferCategory(mediaType: string, provided?: MediaCategory): MediaCategory {
   if (provided) return provided;
+  if (mediaType.startsWith('text/')) return 'subtitles';
   if (mediaType === 'image/gif') return 'tweet_gif';
   if (mediaType.startsWith('image/')) return 'tweet_image';
   if (mediaType.startsWith('video/')) return 'tweet_video';
@@ -111,8 +113,16 @@ PRIVATE_RANGES.addSubnet('fc00::', 7, 'ipv6');
 PRIVATE_RANGES.addSubnet('fe80::', 10, 'ipv6');
 
 export function isPrivateAddress(address: string): boolean {
-  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(address);
-  if (mapped?.[1]) return PRIVATE_RANGES.check(mapped[1], 'ipv4');
+  const dotted = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(address);
+  if (dotted?.[1]) return PRIVATE_RANGES.check(dotted[1], 'ipv4');
+  // IPv4-mapped IPv6 in hexadecimal form, e.g. ::ffff:7f00:1 or ::ffff:a9fe:a9fe.
+  const hex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(address);
+  if (hex?.[1] && hex[2]) {
+    const high = Number.parseInt(hex[1], 16);
+    const low = Number.parseInt(hex[2], 16);
+    const ipv4 = `${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`;
+    return PRIVATE_RANGES.check(ipv4, 'ipv4');
+  }
   const family = net.isIP(address);
   if (family === 4) return PRIVATE_RANGES.check(address, 'ipv4');
   if (family === 6) return PRIVATE_RANGES.check(address, 'ipv6');
@@ -170,12 +180,19 @@ export function assertPublicMediaUrl(raw: string): Promise<URL> {
   return assertMediaUrl(raw);
 }
 
-async function fetchRemoteMedia(rawUrl: string, logger: Logger): Promise<{ data: Buffer; contentType?: string }> {
+async function fetchRemoteMedia(
+  rawUrl: string,
+  logger: Logger,
+  signal?: AbortSignal,
+  timeoutMs = 20_000,
+): Promise<{ data: Buffer; contentType?: string }> {
   let current = await assertPublicMediaUrl(rawUrl);
+  const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs);
   for (let hop = 0; hop < 4; hop++) {
-    const response = await fetch(current, { redirect: 'manual' });
+    const response = await fetch(current, { redirect: 'manual', signal: requestSignal });
     if ([301, 302, 303, 307, 308].includes(response.status)) {
       const location = response.headers.get('location');
+      await response.body?.cancel().catch(() => undefined);
       if (!location) throw new Error('Media redirect did not include a Location header.');
       current = await assertPublicMediaUrl(new URL(location, current).toString());
       continue;
@@ -210,7 +227,12 @@ interface ResolvedSource {
   close(): Promise<void>;
 }
 
-async function resolveSource(source: MediaSource, logger: Logger): Promise<ResolvedSource> {
+async function resolveSource(
+  source: MediaSource,
+  logger: Logger,
+  signal?: AbortSignal,
+  timeoutMs = 20_000,
+): Promise<ResolvedSource> {
   if (source.kind === 'path') {
     const filePath = source.path;
     if (!filePath) throw new Error('A file path is required for path media sources.');
@@ -259,7 +281,7 @@ async function resolveSource(source: MediaSource, logger: Logger): Promise<Resol
 
   const url = source.url;
   if (!url) throw new Error('A URL is required for URL media sources.');
-  const remote = await fetchRemoteMedia(url, logger);
+  const remote = await fetchRemoteMedia(url, logger, signal, timeoutMs);
   const data = remote.data;
   return {
     size: data.byteLength,
@@ -307,10 +329,14 @@ interface ProcessingInfo {
 export class MediaUploader {
   private readonly client: XClient;
   private readonly logger: Logger;
+  private readonly config: Config;
+  /** Remembers which flow created each media id, so status polls use the same API. */
+  private readonly flows = new Map<string, 'oauth2' | 'oauth1'>();
 
-  constructor(client: XClient, logger: Logger) {
+  constructor(client: XClient, logger: Logger, config: Config) {
     this.client = client;
     this.logger = logger;
+    this.config = config;
   }
 
   get available(): boolean {
@@ -319,7 +345,7 @@ export class MediaUploader {
 
   async upload(options: MediaUploadOptions): Promise<MediaUploadResult> {
     const startedAt = Date.now();
-    const resolved = await resolveSource(options.source, this.logger);
+    const resolved = await resolveSource(options.source, this.logger, options.signal, this.config.http.timeoutMs);
     try {
       const mediaType = inferMediaType(
         options.source.filename ?? resolved.filename,
@@ -337,6 +363,7 @@ export class MediaUploader {
       const { mediaId, mediaKey, processing } = useOAuth2
         ? await this.uploadV2(resolved, mediaType, category, totalSegments, options)
         : await this.uploadV1(resolved, mediaType, category, totalSegments, options);
+      this.flows.set(mediaId, useOAuth2 ? 'oauth2' : 'oauth1');
 
       if (options.altText && options.altText.trim().length > 0) {
         await this.setAltText(mediaId, options.altText.trim(), useOAuth2, options.signal);
@@ -366,6 +393,31 @@ export class MediaUploader {
     } finally {
       await resolved.close();
     }
+  }
+
+  /** Polls processing state using the same API version that created the upload. */
+  async status(mediaId: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
+    const flow = this.flows.get(mediaId) ?? (this.client.auth.hasOAuth2 ? 'oauth2' : 'oauth1');
+    if (flow === 'oauth2') {
+      const res = await this.client.request<{ processing_info?: ProcessingInfo; id?: string; media_key?: string }>({
+        method: 'GET',
+        path: '/2/media/upload',
+        query: { command: 'STATUS', media_id: mediaId },
+        auth: 'oauth2',
+        cache: false,
+        signal,
+      });
+      return { media_id: mediaId, auth: 'oauth2', ...res.data };
+    }
+    const res = await this.client.request<{ processing_info?: ProcessingInfo; media_id_string?: string }>({
+      method: 'GET',
+      path: '/1.1/media/upload.json',
+      query: { command: 'STATUS', media_id: mediaId },
+      auth: 'oauth1',
+      cache: false,
+      signal,
+    });
+    return { media_id: mediaId, auth: 'oauth1', ...res.data };
   }
 
   private async uploadV2(

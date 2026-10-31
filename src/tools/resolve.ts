@@ -41,4 +41,19 @@ export async function resolveUserId(
   return me.data.id;
 }
 
+/**
+ * Target actions must name a user explicitly. Defaulting to the authenticated
+ * account would silently follow/mute/DM yourself.
+ */
+export async function resolveTargetUserId(
+  ctx: ToolContext,
+  ref: UserRefInput,
+  extra: ToolExtra,
+): Promise<string> {
+  if (!ref.user_id && !ref.username) {
+    throw new Error('Provide target_user_id or target_username.');
+  }
+  return resolveUserId(ctx, ref, extra);
+}
+
 export { userId, username };

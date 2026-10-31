@@ -59,6 +59,8 @@ interface ParsedArgs {
   flags: Map<string, string | true>;
 }
 
+const BOOLEAN_FLAGS = new Set(['help', 'version', 'read-only', 'dry-run', 'json', 'logout', 'manual', 'no-browser']);
+
 function parseArgs(argv: string[]): ParsedArgs {
   const flags = new Map<string, string | true>();
   const positional: string[] = [];
@@ -74,6 +76,20 @@ function parseArgs(argv: string[]): ParsedArgs {
       const equals = body.indexOf('=');
       if (equals >= 0) {
         flags.set(body.slice(0, equals), body.slice(equals + 1));
+        continue;
+      }
+      if (body === 'http') {
+        const next = argv[index + 1];
+        if (next !== undefined && /^\d+$/.test(next)) {
+          flags.set('http', next);
+          index++;
+        } else {
+          flags.set('http', true);
+        }
+        continue;
+      }
+      if (BOOLEAN_FLAGS.has(body)) {
+        flags.set(body, true);
         continue;
       }
       const next = argv[index + 1];
@@ -367,8 +383,10 @@ async function main(): Promise<number> {
     process.exit(1);
   });
   process.on('unhandledRejection', (reason) => {
-    logger.error({ err: reason instanceof Error ? reason.stack ?? reason.message : String(reason) }, 'unhandled rejection');
-    process.exit(1);
+    logger.error(
+      { err: reason instanceof Error ? reason.stack ?? reason.message : String(reason) },
+      'unhandled rejection (server keeps running)',
+    );
   });
 
   switch (command) {

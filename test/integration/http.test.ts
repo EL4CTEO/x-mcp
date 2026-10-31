@@ -73,4 +73,30 @@ describe('Streamable HTTP transport', () => {
     const response = await fetch(running.url.replace(/\/mcp$/, '/nope'));
     expect(response.status).toBe(404);
   });
+
+  it('requires the configured bearer token on /mcp', async () => {
+    const securedRuntime = createRuntime(
+      testConfig({ apiBase: fake.baseUrl, httpToken: '0123456789abcdef' }),
+      createLogger('silent'),
+    );
+    const secured = await startHttpServer(securedRuntime, { host: '127.0.0.1', port: 0 });
+    try {
+      const unauthorized = await fetch(secured.url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      expect(unauthorized.status).toBe(401);
+
+      const authorized = await fetch(secured.url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer 0123456789abcdef' },
+        body: '{}',
+      });
+      expect(authorized.status).not.toBe(401);
+    } finally {
+      await secured.close();
+      await securedRuntime.x.close();
+    }
+  });
 });

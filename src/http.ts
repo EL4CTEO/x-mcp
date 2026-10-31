@@ -1,5 +1,5 @@
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Runtime } from './server.ts';
 import { createServer } from './server.ts';
@@ -70,12 +70,24 @@ export interface RunningHttpServer {
 export async function startHttpServer(runtime: Runtime, options: HttpOptions): Promise<RunningHttpServer> {
   const sessions = new Map<string, Session>();
   const loopback = isLoopback(options.host);
+  const token = runtime.config.httpServer.token;
+  const allowedOrigins = runtime.config.httpServer.corsOrigins;
+  if (!loopback && !token) {
+    throw new Error(
+      'Refusing to bind the MCP HTTP transport to a non-loopback address without X_MCP_HTTP_TOKEN. Set a bearer token or bind to 127.0.0.1.',
+    );
+  }
+  if (token && token.length < 16) {
+    throw new Error('X_MCP_HTTP_TOKEN must be at least 16 characters.');
+  }
   let actualPort = options.port;
 
   const http = createHttpServer(async (req, res) => {
     const origin = req.headers.origin;
-    if (origin && (loopback || process.env.X_MCP_HTTP_CORS === '*')) {
-      res.setHeader('access-control-allow-origin', process.env.X_MCP_HTTP_CORS === '*' ? '*' : origin);
+    // Only configured origins receive CORS headers. Never reflect arbitrary
+    // origins: a random web page must not be able to drive the MCP endpoint.
+    if (origin && (allowedOrigins.includes('*') || allowedOrigins.includes(origin))) {
+      res.setHeader('access-control-allow-origin', allowedOrigins.includes('*') ? '*' : origin);
       res.setHeader('vary', 'origin');
       res.setHeader('access-control-allow-methods', 'GET, POST, DELETE, OPTIONS');
       res.setHeader('access-control-allow-headers', 'content-type, mcp-session-id, mcp-protocol-version, authorization');
@@ -102,6 +114,19 @@ export async function startHttpServer(runtime: Runtime, options: HttpOptions): P
     if (url.pathname !== '/mcp') {
       jsonResponse(res, 404, { error: 'Not found. The MCP endpoint is /mcp.' });
       return;
+    }
+
+    if (token) {
+      const provided = Buffer.from(req.headers.authorization ?? '');
+      const expected = Buffer.from(`Bearer ${token}`);
+      if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+        jsonResponse(res, 401, {
+          jsonrpc: '2.0',
+          error: { code: -32001, message: 'Unauthorized: send Authorization: Bearer <X_MCP_HTTP_TOKEN>.' },
+          id: null,
+        });
+        return;
+      }
     }
 
     const sessionId = req.headers['mcp-session-id'];
@@ -172,8 +197,15 @@ export async function startHttpServer(runtime: Runtime, options: HttpOptions): P
       };
 
       const instance = createServer(runtime);
-      await instance.server.connect(transport);
-      await transport.handleRequest(req, res, body);
+      try {
+        await instance.server.connect(transport);
+        await transport.handleRequest(req, res, body);
+      } catch (error) {
+        // A failed initialize must not leak a connected server/transport.
+        await instance.server.close().catch(() => undefined);
+        await transport.close().catch(() => undefined);
+        throw error;
+      }
     } catch (error) {
       const status = (error as Error & { status?: number }).status ?? 500;
       runtime.logger.warn(

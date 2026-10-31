@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import path from 'node:path';
 import type { RichToolOutput, ActionTool } from './define.ts';
 import { progressReporter } from './define.ts';
 import { normalizeTweetSingle } from '../x/normalize.ts';
@@ -26,12 +27,12 @@ export const mediaTools: ActionTool[] = [
     name: 'x_upload_media',
     title: 'Upload media',
     description:
-      'Upload an image, GIF, video or subtitle file and get a media_id to attach to x_post or x_send_dm. Provide exactly one of path (local file, streamed in 4 MB chunks), base64, or url (downloaded, max 100 MB). Alt text is strongly recommended for accessibility. Videos are processed asynchronously; when wait_for_processing is true (default) the tool polls until X reports success. Requires user auth (OAuth 2.0 media.write, or OAuth 1.0a which uses the legacy upload flow).',
+      'Upload an image, GIF, video or subtitle file and get a media_id to attach to x_posts action "create" or x_dms action "send". Provide exactly one of path (inside an allowed media root, streamed in 4 MB chunks), base64 (max 25 MB), or url (downloaded, max 100 MB). Alt text is strongly recommended for accessibility. Videos are processed asynchronously; when wait_for_processing is true (default) the tool polls until X reports success. Requires user auth (OAuth 2.0 media.write, or OAuth 1.0a which uses the legacy upload flow).',
     toolset: 'media',
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema: {
-      path: z.string().min(1).optional().describe('Absolute or workspace-relative path to a local media file.'),
-      base64: z.string().min(1).optional().describe('Base64-encoded file contents (no data: prefix).'),
+      path: z.string().min(1).optional().describe('Path to a local media file inside X_MCP_MEDIA_ROOTS (default: current directory).'),
+      base64: z.string().min(1).optional().describe('Base64-encoded file contents (no data: prefix, max 25 MB decoded).'),
       url: z.string().url().optional().describe('Public https URL to download media from.'),
       media_type: z.string().optional().describe('MIME type, e.g. image/png or video/mp4. Inferred when omitted.'),
       category: categoryEnum.optional().describe('X media category. Inferred from the MIME type when omitted.'),
@@ -43,12 +44,36 @@ export const mediaTools: ActionTool[] = [
       const sources = [args.path, args.base64, args.url].filter((value) => value !== undefined);
       if (sources.length !== 1) throw new Error('Provide exactly one of path, base64 or url.');
       const onProgress = progressReporter(extra);
+
+      let source;
+      if (args.path) {
+        const resolved = path.resolve(args.path);
+        const compare = process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+        const allowed = ctx.config.media.roots.some((root) => {
+          const normalised = process.platform === 'win32' ? root.toLowerCase() : root;
+          return compare === normalised || compare.startsWith(normalised.endsWith(path.sep) ? normalised : `${normalised}${path.sep}`);
+        });
+        if (!allowed) {
+          throw new Error(
+            `Refusing to read ${resolved}: it is outside the allowed media roots (${ctx.config.media.roots.join(', ')}). Set X_MCP_MEDIA_ROOTS to allow more directories.`,
+          );
+        }
+        source = { kind: 'path' as const, path: resolved };
+      } else if (args.base64) {
+        const clean = args.base64.replace(/\s+/g, '');
+        if (!/^[A-Za-z0-9+/]+={0,2}$/.test(clean)) throw new Error('base64 data is not valid Base64.');
+        const data = Buffer.from(clean, 'base64');
+        if (data.length === 0) throw new Error('base64 data decoded to zero bytes.');
+        if (data.length > 25 * 1024 * 1024) {
+          throw new Error(`base64 media is ${(data.length / 1024 / 1024).toFixed(1)} MB; the base64 limit is 25 MB. Use path or url for larger files.`);
+        }
+        source = { kind: 'buffer' as const, data, filename: args.filename };
+      } else {
+        source = { kind: 'url' as const, url: args.url as string };
+      }
+
       const result = await ctx.media.upload({
-        source: args.path
-          ? { kind: 'path', path: args.path }
-          : args.base64
-            ? { kind: 'buffer', data: Buffer.from(args.base64, 'base64'), filename: args.filename }
-            : { kind: 'url', url: args.url as string },
+        source,
         mediaType: args.media_type,
         category: args.category,
         altText: args.alt_text,
@@ -60,7 +85,7 @@ export const mediaTools: ActionTool[] = [
       });
       return {
         ...result,
-        attach_with: 'Pass media_ids: [media_id] to x_post, or media_id to x_send_dm.',
+        attach_with: 'Pass media_ids: [media_id] to x_posts action "create", or media_id to x_dms action "send".',
       };
     },
   },
@@ -69,20 +94,12 @@ export const mediaTools: ActionTool[] = [
     name: 'x_get_media_status',
     title: 'Check media processing status',
     description:
-      'Poll the processing state of an uploaded video or GIF. Requires user auth. Returns pending/in_progress/succeeded/failed plus an error message when processing failed.',
+      'Poll the processing state of an uploaded video or GIF. Requires user auth. Returns pending/in_progress/succeeded/failed, and error details when X provides them.',
     toolset: 'media',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     inputSchema: { media_id: mediaIdSchema },
     async handler(args, ctx, extra) {
-      const res = await ctx.x.request<{ processing_info?: Record<string, unknown>; id?: string; media_key?: string }>({
-        method: 'GET',
-        path: '/2/media/upload',
-        query: { command: 'STATUS', media_id: args.media_id },
-        auth: 'user',
-        cache: false,
-        signal: extra.signal,
-      });
-      return { media_id: args.media_id, ...res.data };
+      return ctx.media.status(args.media_id, extra.signal);
     },
   },
   {

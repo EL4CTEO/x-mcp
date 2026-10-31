@@ -17,6 +17,7 @@ describe('configuration', () => {
     expect(config.media.maxVideoBytes).toBe(200 * 1024 * 1024);
     expect(config.media.maxImageBytes).toBe(15 * 1024 * 1024);
     expect(config.media.frameWidth).toBe(1_280);
+    expect(config.media.roots.length).toBeGreaterThan(0);
     expect(config.credentialFile.endsWith('credentials.json')).toBe(true);
   });
 

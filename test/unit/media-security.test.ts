@@ -32,6 +32,8 @@ describe('media guardrails', () => {
       'fd00::1',
       'fe80::1',
       '::ffff:127.0.0.1',
+      '::ffff:7f00:1',
+      '::ffff:a9fe:a9fe',
     ]) {
       expect(isPrivateAddress(address), address).toBe(true);
     }

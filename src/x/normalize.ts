@@ -218,6 +218,7 @@ export interface NormalizedList {
   next_token?: string;
   previous_token?: string;
   result_count?: number;
+  errors?: unknown[];
   included?: { users?: Json[]; tweets?: Json[]; media?: Json[] };
 }
 
@@ -237,6 +238,7 @@ export function normalizeTweetList(payload: Json): NormalizedList {
   return {
     data: data.map((tweet) => normalizeTweet(tweet, context)),
     ...metaOf(payload),
+    ...(Array.isArray(payload.errors) && payload.errors.length > 0 ? { errors: payload.errors } : {}),
   };
 }
 
@@ -260,6 +262,7 @@ export function normalizeUserList(payload: Json): NormalizedList {
     ...(includedTweets.length > 0
       ? { included: { tweets: includedTweets.map((tweet) => normalizeTweet(tweet, context)) } }
       : {}),
+    ...(Array.isArray(payload.errors) && payload.errors.length > 0 ? { errors: payload.errors } : {}),
   };
 }
 
@@ -314,15 +317,17 @@ export function normalizeTrend(raw: Json): Json {
   });
 }
 
-export function normalizeDmEvent(raw: Json): Json {
-  const attachments = Array.isArray(raw.attachments)
-    ? (raw.attachments as Json[]).map((attachment) =>
-        compact({
-          media_key: str(attachment.media_key),
-          type: str(attachment.type),
-        }),
-      )
-    : undefined;
+export function normalizeDmEvent(raw: Json, context?: NormalizeContext): Json {
+  const attachmentValue = raw.attachments as Json | Json[] | undefined;
+  const keys = Array.isArray(attachmentValue)
+    ? attachmentValue.map((attachment) => str(attachment.media_key)).filter((key): key is string => Boolean(key))
+    : Array.isArray((attachmentValue as Json | undefined)?.media_keys)
+      ? ((attachmentValue as Json).media_keys as unknown[]).map((key) => String(key))
+      : [];
+  const attachments = keys.map((key) => {
+    const media = context?.media.get(key);
+    return media ? normalizeMedia(media) : { media_key: key };
+  });
   return compact({
     id: str(raw.id),
     event_type: str(raw.event_type),
@@ -330,11 +335,16 @@ export function normalizeDmEvent(raw: Json): Json {
     text: str(raw.text),
     created_at: str(raw.created_at),
     sender_id: str(raw.sender_id),
-    attachments: attachments && attachments.length > 0 ? attachments : undefined,
+    attachments: attachments.length > 0 ? attachments : undefined,
   });
 }
 
 export function normalizeDmEvents(payload: Json): NormalizedList {
   const data = Array.isArray(payload.data) ? (payload.data as Json[]) : [];
-  return { data: data.map(normalizeDmEvent), ...metaOf(payload) };
+  const context = contextFrom(payload.includes as Includes | undefined);
+  return {
+    data: data.map((event) => normalizeDmEvent(event, context)),
+    ...metaOf(payload),
+    ...(Array.isArray(payload.errors) && payload.errors.length > 0 ? { errors: payload.errors } : {}),
+  };
 }

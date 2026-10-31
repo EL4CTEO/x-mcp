@@ -3,7 +3,7 @@ import type { ActionTool } from './define.ts';
 import type { XResult } from '../x/client.ts';
 import { normalizeUser, normalizeUserList, normalizeUserSingle } from '../x/normalize.ts';
 import { maxResults, paginationToken, userRef, userId, username } from './schemas.ts';
-import { resolveUserId } from './resolve.ts';
+import { resolveTargetUserId, resolveUserId } from './resolve.ts';
 import { userQuery } from './query.ts';
 
 type Json = Record<string, unknown>;
@@ -12,7 +12,7 @@ const readAnnotations = { readOnlyHint: true, destructiveHint: false, idempotent
 const writeAnnotations = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true } as const;
 
 function userList(res: XResult<Json[]>) {
-  return normalizeUserList({ data: res.data, includes: res.includes, meta: res.meta });
+  return normalizeUserList({ data: res.data, includes: res.includes, meta: res.meta, errors: res.errors });
 }
 
 function relationship(action: string) {
@@ -20,7 +20,7 @@ function relationship(action: string) {
 }
 
 async function targetUserId(ctx: Parameters<typeof resolveUserId>[0], args: { target_user_id?: string; target_username?: string }, extra: Parameters<typeof resolveUserId>[2]): Promise<string> {
-  return resolveUserId(ctx, { user_id: args.target_user_id, username: args.target_username }, extra);
+  return resolveTargetUserId(ctx, { user_id: args.target_user_id, username: args.target_username }, extra);
 }
 
 const targetRef = {
@@ -86,6 +86,7 @@ export const userTools: ActionTool[] = [
     },
     async handler(args, ctx, extra) {
       if (!args.usernames && !args.user_ids) throw new Error('Provide usernames or user_ids.');
+      if (args.usernames && args.user_ids) throw new Error('Provide either usernames or user_ids, not both.');
       if (args.usernames && args.usernames.length > 0) {
         const res = await ctx.x.request<Json[]>({
           method: 'GET',

@@ -151,7 +151,14 @@ beforeAll(async () => {
       const ids = (fake.requests.at(-1)?.query.ids ?? '').split(',');
       return { body: tweetList(ids.map((id) => ({ ...post, id }))) };
     })
-    .on('POST', '/2/tweets', () => ({ status: 201, body: { data: { id: '999', text: 'created' } } }))
+    .on('POST', '/2/tweets', (request) => {
+      const text = (request.json as { text?: string } | undefined)?.text ?? '';
+      if (text === 'server-error') {
+        return { status: 500, body: { title: 'Server Error', detail: 'transient failure' } };
+      }
+      const id = text === 'one' ? '1000' : text === 'two' ? '1001' : text === 'three' ? '1002' : '999';
+      return { status: 201, body: { data: { id, text } } };
+    })
     .json('DELETE', '/2/tweets/999', { data: { deleted: true } })
     .on('GET', '/2/tweets/search/recent', () => ({
       body: tweetList([post], 'next-page-token'),
@@ -160,7 +167,13 @@ beforeAll(async () => {
     .json('GET', '/2/users/me', { data: user })
     .json('GET', '/2/users/by/username/bob', { data: user })
     .json('GET', '/2/users/7', { data: user })
-    .on('GET', '/2/users/7/tweets', () => ({ body: tweetList([post]) }))
+    .on('GET', '/2/users/7/tweets', (request) => {
+      // Protected resource: the app-only bearer is rejected, user auth succeeds.
+      if (request.headers.authorization === 'Bearer test-bearer-token') {
+        return { status: 401, body: { title: 'Unauthorized', detail: 'user context required', status: 401 } };
+      }
+      return { body: tweetList([post]) };
+    })
     .on('GET', '/2/users/7/timelines/reverse_chronological', () => ({ body: tweetList([post]) }))
     .on('GET', '/2/users/7/followers', () => ({
       body: {
@@ -213,7 +226,8 @@ beforeAll(async () => {
     .json('POST', '/2/media/upload/initialize', { data: { id: '111', media_key: '3_111', expires_after_secs: 86_400 } }, 202)
     .json('POST', '/2/media/upload/111/append', { data: {} }, 204)
     .json('POST', '/2/media/upload/111/finalize', { data: { id: '111', processing_info: undefined } })
-    .json('POST', '/2/media/metadata', { data: { id: '111' } });
+    .json('POST', '/2/media/metadata', { data: { id: '111' } })
+    .json('GET', '/2/media/upload', { data: { id: '111', processing_info: { state: 'succeeded' } } });
 });
 
 afterAll(async () => {
@@ -351,6 +365,25 @@ describe('reads', () => {
     expect(request?.query.next_token).toBeUndefined();
   });
 
+  it('falls back to user auth when the app-only bearer is rejected', async () => {
+    harness = await createHarness(testConfig({ apiBase: fake.baseUrl }));
+    const result = await harness.call('x_timelines', { action: 'user', username: 'bob', max_results: 5 });
+    expect(result.isError).toBe(false);
+    expect(result.json.data[0].id).toBe('100');
+    const calls = fake.calls('GET', '/2/users/7/tweets');
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.headers.authorization).toBe('Bearer test-bearer-token');
+    expect(calls[1]?.headers.authorization).toBe('Bearer test-user-token');
+  });
+
+  it('requires an explicit target for relationship actions', async () => {
+    harness = await createHarness(testConfig({ apiBase: fake.baseUrl }));
+    const result = await harness.call('x_users', { action: 'follow' });
+    expect(result.isError).toBe(true);
+    expect(result.text).toMatch(/target_user_id or target_username/);
+    expect(fake.calls('POST', '/2/users/7/following')).toHaveLength(0);
+  });
+
   it('surfaces structured API errors with hints', async () => {
     harness = await createHarness(testConfig({ apiBase: fake.baseUrl }));
     const result = await harness.call('x_posts', { action: 'get', tweet_id: '404' });
@@ -393,17 +426,24 @@ describe('writes and guardrails', () => {
     });
   });
 
+  it('does not retry a non-idempotent POST after a 5xx response', async () => {
+    harness = await createHarness(testConfig({ apiBase: fake.baseUrl, maxRetries: 2 }));
+    const result = await harness.call('x_posts', { action: 'create', text: 'server-error' });
+    expect(result.isError).toBe(true);
+    expect(fake.calls('POST', '/2/tweets')).toHaveLength(1);
+  });
+
   it('publishes threads in order and chains replies', async () => {
     harness = await createHarness(testConfig({ apiBase: fake.baseUrl }));
     const result = await harness.call('x_posts', { action: 'create_thread',
       posts: [{ text: 'one' }, { text: 'two' }, { text: 'three' }],
     });
     expect(result.json).toMatchObject({ complete: true, posted_count: 3 });
-    expect(result.json.published.map((entry: { id: string }) => entry.id)).toEqual(['999', '999', '999']);
+    expect(result.json.published.map((entry: { id: string }) => entry.id)).toEqual(['1000', '1001', '1002']);
     const bodies = fake.calls('POST', '/2/tweets').map((request) => request.json);
     expect(bodies[0]).toMatchObject({ text: 'one' });
-    expect(bodies[1]).toMatchObject({ text: 'two', reply: { in_reply_to_tweet_id: '999' } });
-    expect(bodies[2]).toMatchObject({ text: 'three', reply: { in_reply_to_tweet_id: '999' } });
+    expect(bodies[1]).toMatchObject({ text: 'two', reply: { in_reply_to_tweet_id: '1000' } });
+    expect(bodies[2]).toMatchObject({ text: 'three', reply: { in_reply_to_tweet_id: '1001' } });
   });
 
   it('likes, reposts and bookmarks as the authenticated account', async () => {
@@ -524,6 +564,14 @@ describe('media and DMs', () => {
     const usage = await harness.call('x_meta', { action: 'usage' });
     expect(usage.json).toMatchObject({ cap: 10_000, project_usage: 42 });
     expect(fake.calls('GET', '/2/usage/tweets')[0]?.headers.authorization).toBe('Bearer test-bearer-token');
+  });
+
+  it('checks media processing status through the matching upload flow', async () => {
+    harness = await createHarness(testConfig({ apiBase: fake.baseUrl }));
+    const result = await harness.call('x_media', { action: 'status', media_id: '111' });
+    expect(result.isError).toBe(false);
+    expect(result.json).toMatchObject({ media_id: '111', auth: 'oauth2', processing_info: { state: 'succeeded' } });
+    expect(fake.calls('GET', '/2/media/upload')).toHaveLength(1);
   });
 
   it('returns photos as MCP image content that vision models can read', async () => {

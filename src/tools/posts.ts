@@ -2,13 +2,14 @@ import { z } from 'zod';
 import type { ActionTool } from './define.ts';
 import type { XResult } from '../x/client.ts';
 import { normalizeTweetList, normalizeTweetSingle, normalizeUser, type NormalizedList } from '../x/normalize.ts';
+import { XApiError } from '../x/errors.ts';
 import { maxResults, paginationToken, replySettings, timeRange, tweetId } from './schemas.ts';
 import { postQuery as tweetFields, userQuery } from './query.ts';
 
 type Json = Record<string, unknown>;
 
 function listFrom<T>(res: XResult<T[]>): NormalizedList {
-  return normalizeTweetList({ data: res.data, includes: res.includes, meta: res.meta });
+  return normalizeTweetList({ data: res.data, includes: res.includes, meta: res.meta, errors: res.errors });
 }
 
 const readAnnotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true } as const;
@@ -113,15 +114,18 @@ export const postTools: ActionTool[] = [
           published.push({ id, url: `https://x.com/i/status/${id}`, text: res.data.text ?? post.text });
           replyTo = id;
         } catch (error) {
+          if (extra.signal?.aborted || (error instanceof Error && error.name === 'AbortError')) throw error;
+          const failure = error instanceof XApiError ? error.toJSON() : { error: error instanceof Error ? error.message : String(error) };
           return {
             complete: false,
+            partial: published.length > 0,
             posted_count: published.length,
             failed_at: index,
-            error: error instanceof Error ? error.message : String(error),
+            error: failure,
             published,
             hint:
               published.length > 0
-                ? 'Some posts were already published. Continue by replying to the last published id, or delete them with x_delete_post.'
+                ? 'Some posts were already published. Continue by replying to the last published id, or delete them with x_posts action "delete".'
                 : 'Nothing was published.',
           };
         }
@@ -308,8 +312,15 @@ export const postTools: ActionTool[] = [
         },
         cache: { ttlMs: 15_000 },
         signal: extra.signal,
+      }).catch((error: unknown) => {
+        if (extra.signal?.aborted) throw error;
+        return undefined;
       });
-      const replies = listFrom(repliesRes).data;
+      const page = repliesRes ? listFrom(repliesRes) : undefined;
+      const replies = page?.data ?? [];
+      const warning = repliesRes
+        ? undefined
+        : 'The recent-search index could not be queried (older than 7 days or no access); only the root post is returned.';
       const seen = new Set<string>([String(root?.id ?? args.tweet_id)]);
       const merged = [root, ...replies].filter((post): post is Json => Boolean(post)).filter((post) => {
         const id = String(post.id);
@@ -323,7 +334,8 @@ export const postTools: ActionTool[] = [
         root,
         replies: merged.filter((post) => String(post.id) !== String(root?.id)),
         count: merged.length,
-        truncated: replies.length >= args.max_replies,
+        truncated: Boolean(page?.next_token) || replies.length >= args.max_replies,
+        ...(warning ? { warning } : {}),
       };
     },
   },

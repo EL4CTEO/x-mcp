@@ -2,9 +2,9 @@ import { z } from 'zod';
 import type { ActionTool } from './define.ts';
 import type { XResult } from '../x/client.ts';
 import { normalizeDmEvents } from '../x/normalize.ts';
-import { DM_EVENT_EXPANSIONS, DM_EVENT_FIELDS } from '../x/fields.ts';
+import { DM_EVENT_EXPANSIONS, DM_EVENT_FIELDS, MEDIA_FIELDS } from '../x/fields.ts';
 import { maxResults, paginationToken, userRef } from './schemas.ts';
-import { resolveUserId } from './resolve.ts';
+import { resolveTargetUserId } from './resolve.ts';
 
 type Json = Record<string, unknown>;
 
@@ -15,12 +15,13 @@ function dmQuery(extra: Record<string, string | number | undefined> = {}): Recor
   return {
     'dm_event.fields': DM_EVENT_FIELDS,
     expansions: DM_EVENT_EXPANSIONS,
+    'media.fields': MEDIA_FIELDS,
     ...extra,
   };
 }
 
 function dmEvents(res: XResult<Json[]>) {
-  return normalizeDmEvents({ data: res.data, includes: res.includes, meta: res.meta });
+  return normalizeDmEvents({ data: res.data, includes: res.includes, meta: res.meta, errors: res.errors });
 }
 
 const messageInput = {
@@ -46,7 +47,7 @@ export const dmTools: ActionTool[] = [
       ...messageInput,
     },
     async handler(args, ctx, extra) {
-      const participantId = await resolveUserId(ctx, args, extra);
+      const participantId = await resolveTargetUserId(ctx, args, extra);
       const body: Record<string, unknown> = { text: args.text };
       if (args.media_id) body.attachments = [{ media_id: args.media_id }];
       const res = await ctx.x.request<{ dm_conversation_id?: string; dm_event_id?: string }>({
@@ -166,7 +167,7 @@ export const dmTools: ActionTool[] = [
       next_token: paginationToken,
     },
     async handler(args, ctx, extra) {
-      const participantId = await resolveUserId(ctx, args, extra);
+      const participantId = await resolveTargetUserId(ctx, args, extra);
       const res = await ctx.x.request<Json[]>({
         method: 'GET',
         path: `/2/dm_conversations/with/${participantId}/dm_events`,

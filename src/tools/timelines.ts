@@ -11,7 +11,7 @@ type Json = Record<string, unknown>;
 const readAnnotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true } as const;
 
 function lists(res: XResult<Json[]>) {
-  return normalizeTweetList({ data: res.data, includes: res.includes, meta: res.meta });
+  return normalizeTweetList({ data: res.data, includes: res.includes, meta: res.meta, errors: res.errors });
 }
 
 const excludeParam = z

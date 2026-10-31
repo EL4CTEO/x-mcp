@@ -103,6 +103,7 @@ export async function runAuthCommand(options: AuthCliOptions): Promise<number> {
   const expiresAt = result.tokens.expiresIn ? Date.now() + result.tokens.expiresIn * 1000 : undefined;
   store.saveOAuth2({
     clientId,
+    clientSecret,
     accessToken: result.tokens.accessToken,
     refreshToken: result.tokens.refreshToken,
     expiresAt,

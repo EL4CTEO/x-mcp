@@ -163,18 +163,27 @@ describe('normalisation', () => {
           sender_id: '7',
           text: 'hello',
           created_at: '2026-01-01T00:00:00Z',
-          attachments: [{ media_key: '3_1' }],
+          attachments: { media_keys: ['3_1'] },
         },
       ],
+      includes: { media: [{ media_key: '3_1', type: 'photo', url: 'https://pbs.twimg.com/dm.jpg', alt_text: 'dm image' }] },
       meta: { next_token: 'n' },
     });
     expect(events.data[0]).toMatchObject({ id: '9', text: 'hello', conversation_id: 'c1', sender_id: '7' });
+    expect((events.data[0] as Record<string, unknown>).attachments).toEqual([
+      expect.objectContaining({ media_key: '3_1', type: 'photo', url: 'https://pbs.twimg.com/dm.jpg' }),
+    ]);
     expect(events.next_token).toBe('n');
 
     expect(normalizeTrend({ trend_name: '#AI', tweet_count: 12_000 })).toMatchObject({
       name: '#AI',
       posts: 12_000,
       url: 'https://x.com/search?q=%23AI',
+    });
+    expect(normalizeTrend({ trend_name: '#Agents', post_count: 777, category: 'Technology', trending_since: '2026-01-01T00:00:00Z' })).toMatchObject({
+      name: '#Agents',
+      posts: 777,
+      category: 'Technology',
     });
   });
 });

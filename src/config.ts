@@ -76,6 +76,8 @@ export interface MediaConfig {
   maxVideoBytes: number;
   maxImageBytes: number;
   frameWidth: number;
+  /** Directories allowed for path-based uploads. */
+  roots: string[];
   /** Test-only: permits http:// and private hosts for media downloads. */
   allowPrivateHosts: boolean;
 }
@@ -96,7 +98,7 @@ export interface Config {
   toolsets: { include: Toolset[]; exclude: Toolset[] };
   maxOutputChars: number;
   logLevel: LogLevel;
-  httpServer: { host: string; port: number };
+  httpServer: { host: string; port: number; token?: string; corsOrigins: string[] };
 }
 
 export class ConfigError extends Error {
@@ -253,7 +255,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       maxVideoBytes: int(env, 'X_MCP_MAX_VIDEO_MB', 200, 1, 8_192) * 1024 * 1024,
       maxImageBytes: int(env, 'X_MCP_MAX_IMAGE_MB', 15, 1, 100) * 1024 * 1024,
       frameWidth: int(env, 'X_MCP_FRAME_WIDTH', 1_280, 160, 4_096),
-      allowPrivateHosts: bool(env, 'X_MCP_MEDIA_ALLOW_PRIVATE', false),
+      roots: (str(env, 'X_MCP_MEDIA_ROOTS') ?? process.cwd())
+        .split(path.delimiter)
+        .map((root) => path.resolve(root.trim()))
+        .filter(Boolean),
+      // Only honoured for the test harness; production always validates hosts.
+      allowPrivateHosts: bool(env, 'X_MCP_MEDIA_ALLOW_PRIVATE', false) && process.env.NODE_ENV === 'test',
     },
     toolsets: {
       include: toolsetList(env, 'X_MCP_TOOLSETS'),
@@ -264,6 +271,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     httpServer: {
       host: str(env, 'X_MCP_HTTP_HOST') ?? '127.0.0.1',
       port: int(env, 'X_MCP_HTTP_PORT', 3333, 0, 65_535),
+      token: str(env, 'X_MCP_HTTP_TOKEN'),
+      corsOrigins: (str(env, 'X_MCP_HTTP_CORS') ?? '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
     },
   };
 }

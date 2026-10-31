@@ -35,7 +35,7 @@ Add the server to your MCP client. For Claude Desktop / Cursor:
   "mcpServers": {
     "x": {
       "command": "node",
-      "args": ["/absolute/path/to/x-mcp-server/dist/index.mjs"],
+      "args": ["/absolute/path/to/x-mcp/dist/index.mjs"],
       "env": {
         "X_BEARER_TOKEN": "your-app-only-bearer-token"
       }
@@ -43,6 +43,8 @@ Add the server to your MCP client. For Claude Desktop / Cursor:
   }
 }
 ```
+
+Once published to npm, `{ "command": "npx", "args": ["-y", "x-mcp"] }` works too.
 
 Restart the client. The `x_*` tools should appear.
 
@@ -141,9 +143,12 @@ node dist/index.mjs auth --logout   # remove saved tokens
 | `X_MCP_READ_ONLY` | `false` | Block all posting, liking, DMs, etc. |
 | `X_MCP_DRY_RUN` | `false` | Show what would be posted, without posting |
 | `X_MCP_FFMPEG` | auto-detected | ffmpeg binary for video frames |
+| `X_MCP_MEDIA_ROOTS` | current directory | Directories allowed for path-based uploads |
 | `X_MCP_TOOLSETS` | all | Only expose some tools, e.g. `posts,users` |
 | `X_MCP_CACHE` | `on` | Cache repeated reads for 30 s |
 | `X_MCP_HTTP_PORT` | `3333` | Port for HTTP mode |
+| `X_MCP_HTTP_TOKEN` | — | Require a bearer token on `/mcp` (mandatory off-loopback) |
+| `X_MCP_HTTP_CORS` | none | Comma-separated allowed browser origins |
 | `X_MCP_LOG_LEVEL` | `info` | `debug` while troubleshooting |
 
 See [`.env.example`](./.env.example) for the full list, including proxies, timeouts and rate-limit behaviour.
@@ -153,8 +158,8 @@ See [`.env.example`](./.env.example) for the full list, including proxies, timeo
 - Use `--read-only` for research-only agents.
 - Use `--dry-run` to preview every write before enabling it.
 - Writes and DMs are visible to real people. The server's instructions tell agents to confirm before publishing.
-- Local media uploads are restricted to image/video extensions, and remote media downloads reject private network addresses.
-- Keep the HTTP server on `127.0.0.1` unless you add authentication in front of it.
+- Local media uploads are restricted to image/video extensions **and** to `X_MCP_MEDIA_ROOTS` (default: the current directory), and remote media downloads reject private network addresses.
+- The HTTP transport binds to `127.0.0.1` by default. Off-loopback binds require `X_MCP_HTTP_TOKEN`; CORS is opt-in via `X_MCP_HTTP_CORS`.
 
 ## Troubleshooting
 
@@ -171,7 +176,7 @@ See [`.env.example`](./.env.example) for the full list, including proxies, timeo
 
 ```bash
 npm run typecheck
-npm test          # 79 tests, no X credentials or network needed
+npm test          # 85 tests, no X credentials or network needed
 npm run build
 ```
 

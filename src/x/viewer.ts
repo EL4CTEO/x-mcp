@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import type { Config } from '../config.ts';
 import type { Logger } from '../logger.ts';
 import { assertMediaUrl } from './media.ts';
@@ -83,14 +83,9 @@ class FfmpegLocator {
     if (this.resolved !== undefined) return this.resolved ?? undefined;
     const candidates = [...new Set([this.configured, process.env.X_MCP_FFMPEG, 'ffmpeg'].filter((value): value is string => Boolean(value)))];
     for (const candidate of candidates) {
-      try {
-        const result = spawnSync(candidate, ['-version'], { stdio: 'ignore', timeout: 4_000, windowsHide: true });
-        if (!result.error && result.status === 0) {
-          this.resolved = candidate;
-          return candidate;
-        }
-      } catch {
-        // Sandboxes may block process creation; treat as unavailable.
+      if (await runProcess(candidate, ['-version'], 4_000)) {
+        this.resolved = candidate;
+        return candidate;
       }
     }
     this.resolved = null;
@@ -258,10 +253,14 @@ export class MediaViewer {
     onChunk: (chunk: Buffer) => void | Promise<void>,
   ): Promise<{ contentType: string; bytes: number }> {
     let current = await assertMediaUrl(rawUrl, policy);
+    const requestSignal = signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(this.config.http.timeoutMs)])
+      : AbortSignal.timeout(this.config.http.timeoutMs);
     for (let hop = 0; hop < 4; hop++) {
-      const response = await fetch(current, { redirect: 'manual', signal });
+      const response = await fetch(current, { redirect: 'manual', signal: requestSignal });
       if ([301, 302, 303, 307, 308].includes(response.status)) {
         const location = response.headers.get('location');
+        await response.body?.cancel().catch(() => undefined);
         if (!location) throw new MediaDownloadError('Media redirect did not include a Location header.');
         current = await assertMediaUrl(new URL(location, current).toString(), policy);
         continue;

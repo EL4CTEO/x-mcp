@@ -37,6 +37,7 @@ export interface XResult<T = unknown> {
   data: T;
   includes?: Includes | undefined;
   meta?: Record<string, unknown> | undefined;
+  errors?: unknown[] | undefined;
   status: number;
   headers: Headers;
   cached: boolean;
@@ -48,6 +49,7 @@ export interface XResult<T = unknown> {
 }
 
 export interface AuditedRequest {
+  seq: number;
   method: string;
   url: string;
   auth: string;
@@ -76,6 +78,7 @@ export class XClient {
   private readonly logger: Logger;
   private readonly cache: TtlCache<unknown>;
   private readonly audit: AuditedRequest[] = [];
+  private auditSeq = 0;
 
   constructor(config: Config, logger: Logger, auth?: AuthManager, http?: HttpTransport) {
     this.config = config;
@@ -148,8 +151,9 @@ export class XClient {
     await this.limiter.acquire(bucket, request.signal);
 
     let refreshed401 = false;
+    let authFallback = false;
     for (;;) {
-      const auth = await this.resolveAuth(request, url);
+      const auth = await this.resolveAuth(request, url, authFallback);
       const headers: Record<string, string> = {
         accept: 'application/json',
         'user-agent': this.config.http.userAgent,
@@ -191,6 +195,20 @@ export class XClient {
         }
       }
 
+      // Auto auth prefers the app-only bearer. Protected resources reject it,
+      // so retry once with the user session when one is available.
+      if (
+        (response.status === 401 || response.status === 403) &&
+        auth.kind === 'app' &&
+        (request.auth ?? 'auto') === 'auto' &&
+        !authFallback &&
+        this.auth.hasUserAuth
+      ) {
+        authFallback = true;
+        this.logger.debug({ url, status: response.status }, 'retrying with user auth after app-only rejection');
+        continue;
+      }
+
       if (response.status < 200 || response.status >= 300) {
         throw parseXApiError(response.status, response.headers, response.text, { url, requestId });
       }
@@ -211,6 +229,7 @@ export class XClient {
         data: (record?.data ?? record) as T,
         includes: record?.includes as Includes | undefined,
         meta: record?.meta as Record<string, unknown> | undefined,
+        errors: Array.isArray(record?.errors) ? record.errors : undefined,
         status: response.status,
         headers: response.headers,
         cached: false,
@@ -230,10 +249,15 @@ export class XClient {
    * - `user`: OAuth 2.0 when present, OAuth 1.0a otherwise.
    * - `app`: bearer, or the user token as a fallback.
    */
-  private async resolveAuth(request: XRequest, url: string): Promise<ResolvedAuth> {
+  private async resolveAuth(request: XRequest, url: string, forceUser = false): Promise<ResolvedAuth> {
     const requested = request.auth ?? 'auto';
     const wantsUser = requested === 'user' || requested === 'oauth2' || requested === 'oauth1';
     const wantsApp = requested === 'app';
+
+    if (forceUser) {
+      if (this.auth.hasOAuth2) return this.oauth2Headers();
+      if (this.auth.hasOAuth1) return this.oauth1Headers(request, url);
+    }
 
     if (requested === 'oauth2') return this.oauth2Headers();
     if (requested === 'oauth1') return this.oauth1Headers(request, url);
@@ -297,13 +321,14 @@ export class XClient {
     const userKind = this.auth.userAuthKind;
     const auth = userKind ?? (this.auth.hasBearer ? 'app' : 'none');
     const entry: AuditedRequest = {
+      seq: ++this.auditSeq,
       method: request.method,
       url,
       auth: auth === 'none' ? 'none (would fail: no credentials)' : `would use ${auth}`,
       ...(request.body !== undefined ? { body: request.body } : {}),
     };
     this.audit.push(entry);
-    if (this.audit.length > 20) this.audit.shift();
+    if (this.audit.length > 200) this.audit.shift();
     this.logger.info({ method: request.method, url }, 'dry-run: write not sent');
     return entry;
   }
@@ -321,12 +346,12 @@ export class XClient {
     };
   }
 
-  auditSince(index: number): AuditedRequest[] {
-    return this.audit.slice(index);
+  auditSince(seq: number): AuditedRequest[] {
+    return this.audit.filter((entry) => entry.seq > seq);
   }
 
   auditLength(): number {
-    return this.audit.length;
+    return this.auditSeq;
   }
 
   cacheStats(): ReturnType<TtlCache<unknown>['stats']> {

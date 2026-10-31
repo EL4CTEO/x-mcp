@@ -101,11 +101,14 @@ export class AuthManager {
     const accessToken = env?.accessToken ?? stored?.accessToken;
     return {
       clientId,
-      clientSecret: env?.clientSecret,
+      clientSecret: env?.clientSecret ?? stored?.clientSecret,
       redirectUri: env?.redirectUri,
       scopes: env?.scopes ?? stored?.scopes,
       accessToken,
-      refreshToken: env?.refreshToken ?? stored?.refreshToken,
+      // X rotates refresh tokens on every use. Prefer the stored (rotated)
+      // token over a stale environment value so long-running installs survive
+      // restarts; `auth --logout` clears the file when env is authoritative.
+      refreshToken: stored?.refreshToken ?? env?.refreshToken,
       expiresAt: env?.accessToken ? undefined : stored?.expiresAt,
       fromEnvToken: Boolean(env?.accessToken),
     };
@@ -228,24 +231,31 @@ export class AuthManager {
     this.runtimeScopes = tokens.scope ?? previous?.scopes;
     this.runtimeFromRefresh = true;
 
-    const previousFileState = previous?.fromFile ?? false;
-    if (previousFileState) {
-      const stored: StoredOAuth2 = {
-        clientId: previous?.clientId ?? this.clientConfig?.clientId ?? '',
+    const clientId = previous?.clientId ?? this.clientConfig?.clientId ?? '';
+    if (clientId && this.runtimeRefreshToken) {
+      this.store.saveOAuth2({
+        clientId,
+        clientSecret: previous?.clientSecret ?? this.clientConfig?.clientSecret,
         accessToken: tokens.accessToken,
         refreshToken: this.runtimeRefreshToken,
         expiresAt: this.runtimeExpiresAt,
         scopes: this.runtimeScopes,
         tokenType: tokens.tokenType,
-      };
-      if (stored.clientId) this.store.saveOAuth2(stored);
+      });
+      if (!previous?.fromFile) {
+        this.logger.info(
+          { file: this.store.file },
+          'persisted rotated OAuth 2.0 tokens; update environment refresh tokens or use x-mcp auth to keep them stable',
+        );
+      }
     }
   }
 
   /** Called after a successful interactive login. */
-  persistLogin(clientId: string, tokens: TokenSet, redirectUri?: string): StoredOAuth2 {
+  persistLogin(clientId: string, tokens: TokenSet, redirectUri?: string, clientSecret?: string): StoredOAuth2 {
     const stored: StoredOAuth2 = {
       clientId,
+      clientSecret,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresIn ? Date.now() + tokens.expiresIn * 1000 : undefined,
