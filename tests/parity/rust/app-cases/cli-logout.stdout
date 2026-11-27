@@ -1,4 +1,4 @@
 {
   "loggedOut": true,
-  "credentialFile": "xhome\\credentials.json"
+  "credentialFile": "xhome[..]credentials.json"
 }
