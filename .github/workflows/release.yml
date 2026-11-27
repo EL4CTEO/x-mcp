@@ -81,7 +81,8 @@ jobs:
           pattern: bin-*
           path: dist
       - if: env.NODE_AUTH_TOKEN != ''
-        run: node npm/publish.mjs "${GITHUB_REF_NAME#v}" dist
+        # the token may only stage: approve each version with 2FA on npmjs.com
+        run: node npm/publish.mjs "${GITHUB_REF_NAME#v}" dist --stage
 
   crates:
     needs: build

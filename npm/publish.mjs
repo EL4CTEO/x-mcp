@@ -1,5 +1,6 @@
 // Publishes the npm packages from release binaries:
-//   node npm/publish.mjs <version> <dir with bin-<rust target>/x-mcp[.exe]> [--dry-run]
+//   node npm/publish.mjs <version> <dir with bin-<rust target>/x-mcp[.exe]> [--dry-run] [--stage]
+// --stage: `npm stage publish`; each version is then approved with 2FA on npmjs.com (Staged Packages).
 // One package per platform (@el4cteo/x-mcp-<os>-<cpu>) plus the @el4cteo/x-mcp launcher.
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -7,8 +8,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const [version, dist, ...flags] = process.argv.slice(2);
-if (!version || !dist) throw new Error("usage: node npm/publish.mjs <version> <dist> [--dry-run]");
+if (!version || !dist) throw new Error("usage: node npm/publish.mjs <version> <dist> [--dry-run] [--stage]");
 const dry = flags.includes("--dry-run");
+const stage = flags.includes("--stage");
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const out = path.join(root, "target", "npm");
@@ -25,7 +27,7 @@ const TARGETS = {
 const main = JSON.parse(readFileSync(path.join(here, "x-mcp", "package.json"), "utf8"));
 const publish = (dir) => {
   const provenance = process.env.GITHUB_ACTIONS ? ["--provenance"] : [];
-  const args = ["publish", "--access", "public", ...(dry ? ["--dry-run"] : provenance)];
+  const args = [...(stage ? ["stage"] : []), "publish", "--access", "public", ...(dry ? ["--dry-run"] : provenance)];
   execFileSync("npm", args, { cwd: dir, stdio: "inherit", shell: process.platform === "win32" });
 };
 
