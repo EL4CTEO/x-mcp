@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"action\": \"block\",\n  \"at\": \"[..]\",\n  \"user_id\": \"100\",\n  \"target_user_id\": \"12\",\n  \"blocking\": true\n}"}],"structuredContent":{"action":"block","at":"[..]","user_id":"100","target_user_id":"12","blocking":true}},"jsonrpc":"2.0","id":1}

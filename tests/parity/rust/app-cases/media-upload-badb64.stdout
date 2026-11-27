@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"base64 data is not valid Base64.\"\n}"}],"structuredContent":{"error":"base64 data is not valid Base64."},"isError":true},"jsonrpc":"2.0","id":1}

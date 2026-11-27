@@ -1,0 +1,2 @@
+http GET http://sink/2/users/me?user.fields=id
+http DELETE http://sink/2/users/100/likes/20

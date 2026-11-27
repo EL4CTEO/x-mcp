@@ -1,0 +1,4 @@
+http POST http://sink/2/tweets
+content-type: application/json
+
+{"text":"hello world ✨","reply":{"in_reply_to_tweet_id":"20"},"media":{"media_ids":["1","2"]},"poll":{"options":["a","b"],"duration_minutes":60},"reply_settings":"following","made_with_ai":true}

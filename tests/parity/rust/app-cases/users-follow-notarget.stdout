@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"Provide target_user_id or target_username.\"\n}"}],"structuredContent":{"error":"Provide target_user_id or target_username."},"isError":true},"jsonrpc":"2.0","id":1}

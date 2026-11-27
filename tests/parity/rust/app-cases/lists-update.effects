@@ -1,0 +1,4 @@
+http PUT http://sink/2/lists/1234
+content-type: application/json
+
+{"name":"Renamed","private":false}

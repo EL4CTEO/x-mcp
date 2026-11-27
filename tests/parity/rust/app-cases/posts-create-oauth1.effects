@@ -1,0 +1,4 @@
+http POST http://sink/2/tweets
+content-type: application/json
+
+{"text":"signed"}

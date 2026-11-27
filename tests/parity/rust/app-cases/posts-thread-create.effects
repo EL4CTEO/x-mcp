@@ -1,0 +1,12 @@
+http POST http://sink/2/tweets
+content-type: application/json
+
+{"text":"one","reply_settings":"verified"}
+http POST http://sink/2/tweets
+content-type: application/json
+
+{"text":"two","reply":{"in_reply_to_tweet_id":"555"},"media":{"media_ids":["5"]},"reply_settings":"verified"}
+http POST http://sink/2/tweets
+content-type: application/json
+
+{"text":"three","reply":{"in_reply_to_tweet_id":"555"},"reply_settings":"verified"}

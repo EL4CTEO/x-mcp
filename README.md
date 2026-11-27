@@ -1,59 +1,62 @@
 <p align="center">
-  <img src="assets/logo.png" alt="x-mcp logo" width="140">
+  <img src="https://raw.githubusercontent.com/EL4CTEO/x-mcp/main/assets/logo.svg" alt="x-mcp" width="120">
 </p>
 
 <h1 align="center">x-mcp</h1>
 
-<p align="center">MCP server for X (Twitter) — 10 tools, 69 actions.</p>
+<p align="center">MCP server for X (Twitter). 10 tools, 69 actions, one native binary.</p>
 
-Give AI agents access to X: read and search posts, publish threads, upload media, manage Lists, send DMs, and see images and video frames.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@el4cteo/x-mcp"><img src="https://img.shields.io/npm/v/@el4cteo/x-mcp?style=flat&colorA=0e0e10&colorB=f26a1b&label=npm" alt="npm"></a>
+  <a href="https://crates.io/crates/x-twitter-mcp"><img src="https://img.shields.io/crates/v/x-twitter-mcp?style=flat&colorA=0e0e10&colorB=f26a1b&label=crates.io" alt="crates.io"></a>
+  <a href="https://github.com/EL4CTEO/x-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/EL4CTEO/x-mcp/ci.yml?style=flat&colorA=0e0e10&label=ci" alt="ci"></a>
+</p>
+
+Give AI agents X: read and search posts, publish threads, upload media, manage Lists, send DMs, and actually *see* images and video frames.
+
+Written in Rust. Compared with the previous Node.js version, on the same machine (median of 15 cold starts to a `tools/list` reply):
+
+| | Node.js 1.x | Rust 2.x |
+| --- | ---: | ---: |
+| Start-up to `tools/list` | 451 ms | **9 ms** |
+| Peak memory | 81.7 MB | **7.0 MB** |
+| Install size | 112 MB `node_modules` | **4 MB** binary |
+
+Behaviour is checked against the original: [123 recorded cases](tests/parity) replay byte-for-byte, including every request sent to X.
 
 ## Install
-
-Requires Node.js 22.18+.
-
-```bash
-npm install
-npm run build
-```
-
-Add it to your MCP client (Claude Desktop, Cursor, Codex, custom agents):
 
 ```json
 {
   "mcpServers": {
     "x": {
-      "command": "node",
-      "args": ["/absolute/path/to/x-mcp/dist/index.mjs"],
+      "command": "npx",
+      "args": ["-y", "@el4cteo/x-mcp"],
       "env": { "X_BEARER_TOKEN": "..." }
     }
   }
 }
 ```
 
-Once published to npm: `{ "command": "npx", "args": ["-y", "@el4cteo/x-mcp"] }`.
-
-Or install the CLI globally:
+Works in Claude Desktop, Claude Code, Cursor, Codex and any MCP client. Other ways to get the binary:
 
 ```bash
-npm install -g @el4cteo/x-mcp
-x-mcp
+npm i -g @el4cteo/x-mcp        # prebuilt binary, no Node runtime needed at run time
+cargo install x-twitter-mcp    # build from source; installs `x-mcp`
 ```
+
+Or download an archive from [Releases](https://github.com/EL4CTEO/x-mcp/releases) (Windows, macOS, Linux; x64 and arm64) and point `command` at `x-mcp`.
 
 ## Sign in
 
-- **Public reads** — set `X_BEARER_TOKEN`.
-- **Posting, DMs, bookmarks** — run:
+- **Public reads**: set `X_BEARER_TOKEN`.
+- **Posting, DMs, bookmarks**: run `x-mcp auth --client-id YOUR_OAUTH2_CLIENT_ID` and approve in the browser.
 
-```bash
-node dist/index.mjs auth --client-id YOUR_OAUTH2_CLIENT_ID
-```
-
-Set the X app callback to `http://127.0.0.1:8787/callback`. Tokens are stored in `~/.config/x-mcp/credentials.json` and refreshed automatically. OAuth 1.0a keys (`X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`) also work.
+Set the X app callback to `http://127.0.0.1:8787/callback`. Tokens go to `~/.config/x-mcp/credentials.json` (mode 0600) and refresh automatically; rotated refresh tokens are saved. OAuth 1.0a keys (`X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`) work too.
 
 ## Tools
 
-Ten tools. Each call takes an `action` plus that action's parameters:
+Each tool takes an `action` plus that action's parameters:
 
 ```json
 { "action": "search", "query": "mcp -is:retweet", "max_results": 20 }
@@ -72,27 +75,20 @@ Ten tools. Each call takes an `action` plus that action's parameters:
 | `x_media` | upload, status, view |
 | `x_meta` | auth_status, rate_limits, usage |
 
-Run `node dist/index.mjs tools` for descriptions.
+Also: resources (`x://me`, `x://users/{username}`, `x://posts/{id}`, `x://lists/{id}`, `x://rate-limits`, `x://usage`) and prompts (`draft_thread`, `reply_triage`, `account_report`, `summarize_conversation`). `x-mcp tools` lists every action.
 
 ## See images and video
 
-`x_media` action `view` returns the post's media as MCP image content.
-
-- Photos come back directly; carousels use `media_index` (0–3).
-- Videos and GIFs are sampled into 1–6 frames when **ffmpeg** is installed.
-- Without ffmpeg you get the preview frame plus the video URL.
-
-Install ffmpeg: `winget install Gyan.FFmpeg` (Windows), `brew install ffmpeg` (macOS), `sudo apt install ffmpeg` (Linux). Or set `X_MCP_FFMPEG`.
-
-Limit: 15 MB per image, 200 MB per video; raise with `X_MCP_MAX_IMAGE_MB` / `X_MCP_MAX_VIDEO_MB`.
+`x_media` action `view` returns a post's media as MCP image content. Photos come back directly (`media_index` 0–3 for carousels). Videos and GIFs are sampled into 1–6 JPEG frames when [ffmpeg](https://ffmpeg.org) is installed (`winget install Gyan.FFmpeg`, `brew install ffmpeg`, `apt install ffmpeg`, or set `X_MCP_FFMPEG`); without it you get the preview frame and the video URL.
 
 ## Commands
 
 ```bash
-node dist/index.mjs                 # stdio
-node dist/index.mjs serve --http    # http://127.0.0.1:3333/mcp
-node dist/index.mjs doctor          # credentials + connection check
-node dist/index.mjs auth --logout   # remove tokens
+x-mcp                        # stdio (default)
+x-mcp serve --http [port]    # Streamable HTTP at http://127.0.0.1:3333/mcp
+x-mcp doctor                 # credentials, ffmpeg and connectivity check
+x-mcp tools [--json]         # list tools and actions
+x-mcp auth --logout          # remove stored tokens
 ```
 
 ## Settings
@@ -100,27 +96,41 @@ node dist/index.mjs auth --logout   # remove tokens
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `X_BEARER_TOKEN` | — | App-only token for public reads |
-| `X_MCP_READ_ONLY` | `false` | Block all writes |
-| `X_MCP_DRY_RUN` | `false` | Preview writes without sending |
-| `X_MCP_TOOLSETS` | all | Expose only some tools, e.g. `posts,users` |
-| `X_MCP_MEDIA_ROOTS` | cwd | Directories allowed for uploads |
-| `X_MCP_HTTP_TOKEN` | — | Bearer token for HTTP mode |
+| `X_MCP_READ_ONLY` | `false` | Refuse every write |
+| `X_MCP_DRY_RUN` | `false` | Return the requests a write would send, without sending |
+| `X_MCP_TOOLSETS` / `X_MCP_DISABLE_TOOLSETS` | all / none | Expose only some tools, e.g. `posts,users` |
+| `X_MCP_MEDIA_ROOTS` | cwd | Directories allowed for path uploads |
+| `X_MCP_RATE_LIMIT_MODE` | `wait` | `wait` for the window to reset, or `fail` fast |
+| `X_MCP_HTTP_TOKEN` | — | Bearer token for HTTP mode (required off-loopback) |
 
-Full list in [`.env.example`](./.env.example).
+Full list in [`.env.example`](.env.example); a `.env` in the working directory is read too.
 
 ## Safety
 
-- `--read-only` for research-only agents, `--dry-run` to preview writes.
-- Media downloads reject private addresses; uploads are restricted to media files in allowed roots.
-- HTTP mode binds to loopback by default and requires a token off-loopback.
-- Posts and DMs are public or permanent — agents are instructed to confirm first.
+- `--read-only` for research agents, `--dry-run` to preview writes.
+- Uploads only read real media files inside allowed roots; media downloads require https and reject private, loopback and link-local addresses, re-checked on every redirect.
+- HTTP mode binds to loopback by default, checks the Host header against DNS rebinding, compares tokens in constant time, and never reflects arbitrary CORS origins.
+- Posting and DMs reach real people; the server instructs agents to confirm first.
 
-## Development
+## How it is built
 
-```bash
-npm run typecheck
-npm test     # 85 tests, no X credentials needed
-npm run build
+```
+src/
+  main.rs            CLI: serve, auth, doctor, tools
+  mcp/               JSON-RPC dispatcher, stdio and Streamable HTTP transports, prompts, resources
+  tools/             one file per toolset; schema.rs declares each parameter once and derives
+                     validation, defaults and the JSON Schema from it
+  x/                 X client: auth selection, single-flight TTL/LRU cache, rate-limit windows,
+                     retries, normalisation, chunked media upload, ffmpeg frame sampling
+  auth/              OAuth 2.0 PKCE + refresh (one refresh across concurrent calls), OAuth 1.0a
+                     signing, 0600 credential store
+tests/mcp.rs         end-to-end: stdio, HTTP sessions, OAuth refresh after 401, upload and view
+tests/parity/        123 cases recorded from the Node.js original, replayed with rust-anything
 ```
 
-MIT — see [LICENSE](./LICENSE).
+```bash
+cargo test                                                        # no X credentials needed
+rust-anything app replay tests/parity --build target/release/x-mcp
+```
+
+MIT. See [LICENSE](LICENSE).

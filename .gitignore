@@ -1,7 +1,4 @@
-node_modules/
-dist/
-coverage/
-.npm-cache/
+/target/
 .env
 .env.*
 !.env.example
@@ -9,3 +6,5 @@ coverage/
 .DS_Store
 Thumbs.db
 .credentials/
+tests/parity/rust/app-cases/replay-report.md
+tests/parity/rust/app-cases/drift-report.md

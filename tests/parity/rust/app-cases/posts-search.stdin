@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"x_posts","arguments":{"action":"search","query":"from:jack -is:retweet \"café ü\"","max_results":25,"sort_order":"relevancy","start_time":"2026-01-01T00:00:00Z"}}}

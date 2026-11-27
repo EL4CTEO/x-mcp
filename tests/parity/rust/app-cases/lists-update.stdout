@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"list_id\": \"1234\",\n  \"updated\": true,\n  \"name\": \"Renamed\",\n  \"private\": false\n}"}],"structuredContent":{"list_id":"1234","updated":true,"name":"Renamed","private":false}},"jsonrpc":"2.0","id":1}

@@ -1,0 +1,2 @@
+http GET http://sink/2/users/by/username/jack?user.fields=id
+http GET http://sink/2/users/12/list_memberships?max_results=10&list.fields=created_at%2Cdescription%2Cfollower_count%2Cid%2Cmember_count%2Cname%2Cowner_id%2Cprivate&user.fields=created_at%2Cdescription%2Centities%2Cid%2Clocation%2Cname%2Cpinned_tweet_id%2Cprofile_image_url%2Cprotected%2Cpublic_metrics%2Curl%2Cusername%2Cverified%2Cverified_type

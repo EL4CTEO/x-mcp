@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"x_posts","arguments":{"action":"create","text":"q","quote_of":"21","community_id":"9","paid_partnership":false}}}

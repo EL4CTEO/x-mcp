@@ -1,0 +1,5 @@
+http GET http://sink/2/users/me?user.fields=id
+http POST http://sink/2/users/100/likes
+content-type: application/json
+
+{"tweet_id":"20"}

@@ -1,0 +1,4 @@
+http POST http://sink/2/lists/1234/members
+content-type: application/json
+
+{"user_id":"12"}

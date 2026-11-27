@@ -1,0 +1,47 @@
+{
+  "name": "@el4cteo/x-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for X (Twitter): 10 grouped tools, 69 actions for posts, timelines, users, Lists, Spaces, trends, DMs and media, with image viewing and video frames. Native Rust binary.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "x",
+    "twitter",
+    "ai",
+    "agents",
+    "llm",
+    "claude",
+    "rust"
+  ],
+  "homepage": "https://github.com/EL4CTEO/x-mcp#readme",
+  "bugs": "https://github.com/EL4CTEO/x-mcp/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EL4CTEO/x-mcp.git"
+  },
+  "license": "MIT",
+  "author": "EL4CTEO",
+  "bin": {
+    "x-mcp": "bin/x-mcp.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE",
+    ".env.example"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@el4cteo/x-mcp-win32-x64": "2.0.0",
+    "@el4cteo/x-mcp-win32-arm64": "2.0.0",
+    "@el4cteo/x-mcp-linux-x64": "2.0.0",
+    "@el4cteo/x-mcp-linux-arm64": "2.0.0",
+    "@el4cteo/x-mcp-darwin-arm64": "2.0.0",
+    "@el4cteo/x-mcp-darwin-x64": "2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

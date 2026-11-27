@@ -1,0 +1,15 @@
+bin.name = "x-mcp"
+args = []
+env.add.X_ACCESS_TOKEN = "at"
+env.add.X_ACCESS_TOKEN_SECRET = "ats"
+env.add.X_API_KEY = "ck"
+env.add.X_API_SECRET = "cs"
+env.add.X_MCP_CACHE = "off"
+env.add.X_MCP_HOME = "xhome"
+env.add.X_MCP_LOG_LEVEL = "silent"
+env.add.X_MCP_MAX_RETRIES = "0"
+env.add.X_MCP_RATE_LIMIT_MODE = "fail"
+env.add.X_MCP_TIMEOUT_MS = "5000"
+env.add.X_MCP_TOOLSETS = "meta,posts"
+status.code = 0
+fs.sandbox = true

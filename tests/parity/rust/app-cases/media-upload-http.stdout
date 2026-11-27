@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"Remote media URLs must use https.\"\n}"}],"structuredContent":{"error":"Remote media URLs must use https."},"isError":true},"jsonrpc":"2.0","id":1}

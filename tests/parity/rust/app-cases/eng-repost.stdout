@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"action\": \"repost\",\n  \"at\": \"[..]\",\n  \"user_id\": \"100\",\n  \"tweet_id\": \"20\",\n  \"reposted\": true\n}"}],"structuredContent":{"action":"repost","at":"[..]","user_id":"100","tweet_id":"20","reposted":true}},"jsonrpc":"2.0","id":1}

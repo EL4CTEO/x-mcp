@@ -1,0 +1,1 @@
+http GET http://sink/2/tweets/counts/all?query=%23rust&granularity=hour&end_time=2026-01-02T00%3A00%3A00Z

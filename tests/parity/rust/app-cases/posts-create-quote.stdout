@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"id\": \"555\",\n  \"url\": \"https://x.com/i/status/555\",\n  \"text\": \"hello world\",\n  \"quoted\": \"21\"\n}"}],"structuredContent":{"id":"555","url":"https://x.com/i/status/555","text":"hello world","quoted":"21"}},"jsonrpc":"2.0","id":1}

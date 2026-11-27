@@ -1,0 +1,13 @@
+bin.name = "x-mcp"
+args = []
+env.add.X_BEARER_TOKEN = "test-bearer"
+env.add.X_MCP_HOME = "xhome"
+env.add.X_MCP_LOG_LEVEL = "silent"
+env.add.X_MCP_MAX_OUTPUT_CHARS = "2000"
+env.add.X_MCP_MAX_RETRIES = "0"
+env.add.X_MCP_RATE_LIMIT_MODE = "fail"
+env.add.X_MCP_TIMEOUT_MS = "5000"
+env.add.X_OAUTH2_ACCESS_TOKEN = "user-token"
+env.add.X_OAUTH2_CLIENT_ID = "cid"
+status.code = 0
+fs.sandbox = true

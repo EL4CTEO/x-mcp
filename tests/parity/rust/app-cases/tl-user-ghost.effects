@@ -1,0 +1,1 @@
+http GET http://sink/2/users/by/username/ghost?user.fields=id

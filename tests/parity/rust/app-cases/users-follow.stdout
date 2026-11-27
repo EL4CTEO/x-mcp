@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"action\": \"follow\",\n  \"at\": \"[..]\",\n  \"user_id\": \"100\",\n  \"target_user_id\": \"12\",\n  \"following\": true,\n  \"pending_follow\": false\n}"}],"structuredContent":{"action":"follow","at":"[..]","user_id":"100","target_user_id":"12","following":true,"pending_follow":false}},"jsonrpc":"2.0","id":1}

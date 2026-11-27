@@ -1,0 +1,1 @@
+http GET http://sink/2/users/personalized_trends?personalized_trend.fields=trend_name%2Cpost_count%2Ccategory%2Ctrending_since

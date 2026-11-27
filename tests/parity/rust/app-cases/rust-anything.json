@@ -1,0 +1,674 @@
+{
+  "schema": "rust-anything/app-cases@1",
+  "name": "x-mcp",
+  "run": [
+    "node",
+    "dist/index.mjs"
+  ],
+  "normalize": [
+    "timestamps"
+  ],
+  "normalizers": {
+    "rundir": "rust-anything-app-run-[0-9]+-[0-9]+"
+  },
+  "timeout_secs": 15,
+  "effects": {
+    "http": true,
+    "env": {
+      "X_API_BASE": "http-url",
+      "X_UPLOAD_BASE": "http-url"
+    },
+    "http_responses": [
+      {
+        "method": "GET",
+        "path": "/2/users/me",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"100\",\"username\":\"me_user\",\"name\":\"ME_USER\",\"description\":\"bio of me_user\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/100.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/by/username/ghost",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"errors\":[{\"value\":\"ghost\",\"detail\":\"Could not find user with username: [ghost].\",\"title\":\"Not Found Error\",\"resource_type\":\"user\",\"parameter\":\"username\",\"resource_id\":\"ghost\",\"type\":\"https://api.twitter.com/2/problems/resource-not-found\"}]}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/by/username/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/by",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/search",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/personalized_trends",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"trend_name\":\"Rust 2026\",\"post_count\":\"5K posts\",\"category\":\"Technology\",\"trending_since\":\"Trending now\"}]}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/timelines/reverse_chronological",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/mentions",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/liked_tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/bookmarks",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/followers",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/following",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/muting",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/blocking",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/owned_lists",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1234\",\"name\":\"Rustaceans\",\"private\":true}],\"meta\":{\"result_count\":1,\"next_token\":\"lnt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/list_memberships",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1234\",\"name\":\"Rustaceans\",\"private\":true}],\"meta\":{\"result_count\":1,\"next_token\":\"lnt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*/pinned_lists",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1234\",\"name\":\"Rustaceans\",\"private\":true}],\"meta\":{\"result_count\":1,\"next_token\":\"lnt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/999",
+        "status": 404,
+        "content_type": "application/json",
+        "body": "{\"title\":\"Not Found Error\",\"detail\":\"Could not find tweet with id: [404].\",\"type\":\"https://api.twitter.com/2/problems/resource-not-found\",\"status\":404}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/users",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/following",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"following\":true,\"pending_follow\":false}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/following/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"following\":false}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/muting",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"muting\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/muting/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"muting\":false}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/blocking",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"blocking\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/blocking/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"blocking\":false}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/likes",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"liked\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/likes/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"liked\":false}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/retweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"retweeted\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/retweets/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"retweeted\":false}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/bookmarks",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"bookmarked\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/bookmarks/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"bookmarked\":false}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/users/*/followed_lists",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"following\":true,\"pending_follow\":false}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/users/*/followed_lists/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"following\":false}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/search/recent",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/search/all",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"30\",\"text\":\"first reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}}],\"meta\":{\"result_count\":1},\"errors\":[{\"resource_id\":\"99\",\"title\":\"Authorization Error\",\"type\":\"https://api.twitter.com/2/problems/not-authorized-for-resource\"}]}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/counts/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"end\":\"2026-01-01T01:00:00.000Z\",\"start\":\"2026-01-01T00:00:00.000Z\",\"tweet_count\":42},{\"end\":\"2026-01-01T02:00:00.000Z\",\"start\":\"2026-01-01T01:00:00.000Z\",\"tweet_count\":7}],\"meta\":{\"total_tweet_count\":49,\"next_token\":\"nt1\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/404",
+        "status": 404,
+        "content_type": "application/json",
+        "body": "{\"title\":\"Not Found Error\",\"detail\":\"Could not find tweet with id: [404].\",\"type\":\"https://api.twitter.com/2/problems/resource-not-found\",\"status\":404}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/401",
+        "status": 401,
+        "content_type": "application/json",
+        "body": "{\"title\":\"Unauthorized\",\"type\":\"about:blank\",\"status\":401,\"detail\":\"Unauthorized\"}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/403",
+        "status": 403,
+        "content_type": "application/json",
+        "body": "{\"title\":\"Forbidden\",\"type\":\"about:blank\",\"status\":403,\"detail\":\"You are not permitted to perform this action.\"}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/429",
+        "status": 429,
+        "content_type": "application/json",
+        "body": "{\"title\":\"Too Many Requests\",\"type\":\"about:blank\",\"status\":429,\"detail\":\"Too Many Requests\"}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/500",
+        "status": 500,
+        "content_type": "application/json",
+        "body": "{\"errors\":[{\"message\":\"Internal error\",\"code\":131}]}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/22",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"22\",\"text\":\"plain\",\"author_id\":\"99\",\"created_at\":\"2020-01-01T00:00:00.000Z\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/23",
+        "status": 200,
+        "content_type": "text/plain; charset=utf-8",
+        "body": "not json at all"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/*/liking_users",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/*/retweeted_by",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/*/quote_tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}},\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"555\",\"text\":\"hello world\"}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/tweets/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"deleted\":true}}"
+      },
+      {
+        "method": "PUT",
+        "path": "/2/tweets/*/hidden",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"hidden\":true}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/lists/*/members",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"is_member\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/lists/*/members/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"is_member\":false}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/lists/*/tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/lists/*/members",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/lists/*/followers",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"includes\":{\"tweets\":[{\"id\":\"20\",\"text\":\"pinned\",\"author_id\":\"12\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"unt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/lists/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"1234\",\"name\":\"Rustaceans\",\"description\":\"Rust people\",\"private\":false,\"member_count\":10,\"follower_count\":3,\"owner_id\":\"100\",\"created_at\":\"2021-01-01T00:00:00.000Z\"}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/lists",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"1235\",\"name\":\"New list\"}}"
+      },
+      {
+        "method": "PUT",
+        "path": "/2/lists/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"updated\":true}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/lists/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"deleted\":true}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/spaces/search",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1DXxyRYNejbKM\",\"title\":\"Rust Space\",\"state\":\"live\",\"creator_id\":\"12\",\"host_ids\":[\"12\"],\"participant_count\":99,\"lang\":\"en\",\"is_ticketed\":false,\"started_at\":\"2026-01-01T00:00:00.000Z\"}],\"meta\":{\"result_count\":1}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/spaces/*/tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"31\",\"text\":\"second reply\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T21:00:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"30\",\"text\":\"first reply ü\",\"author_id\":\"13\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:55:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"20\"}],\"public_metrics\":{\"like_count\":1}},{\"id\":\"20\",\"text\":\"just setting up my twttr https://t.co/x\",\"author_id\":\"12\",\"conversation_id\":\"20\",\"created_at\":\"2006-03-21T20:50:14.000Z\",\"lang\":\"en\",\"possibly_sensitive\":false,\"reply_settings\":\"everyone\",\"source\":\"Twitter Web App\",\"edit_history_tweet_ids\":[\"20\",\"19\"],\"public_metrics\":{\"like_count\":200000,\"retweet_count\":120000,\"reply_count\":15000,\"quote_count\":9000,\"bookmark_count\":1200,\"impression_count\":5000000},\"entities\":{\"hashtags\":[{\"tag\":\"first\"}],\"mentions\":[{\"username\":\"biz\"}],\"urls\":[{\"url\":\"https://t.co/x\",\"expanded_url\":\"https://example.com/é\",\"display_url\":\"example.com/é\"}]},\"attachments\":{\"media_keys\":[\"3_1\",\"7_2\"],\"poll_ids\":[\"p1\"]},\"referenced_tweets\":[{\"type\":\"quoted\",\"id\":\"21\"}],\"note_tweet\":{\"text\":\"just setting up my twttr — long form ✨ https://t.co/x\"}}],\"includes\":{\"users\":[{\"id\":\"12\",\"username\":\"jack\",\"name\":\"JACK\",\"description\":\"bio of jack\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":true,\"verified_type\":\"blue\",\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/12.jpg\",\"pinned_tweet_id\":\"20\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}},{\"id\":\"13\",\"username\":\"biz\",\"name\":\"BIZ\",\"description\":\"bio of biz\",\"location\":\"Rome\",\"created_at\":\"2020-01-01T00:00:00.000Z\",\"verified\":false,\"protected\":false,\"profile_image_url\":\"https://pbs.twimg.com/profile_images/13.jpg\",\"public_metrics\":{\"followers_count\":1000,\"following_count\":50,\"tweet_count\":3000,\"listed_count\":7}}],\"media\":[{\"media_key\":\"3_1\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/media/a.jpg\",\"alt_text\":\"a photo\",\"width\":1200,\"height\":800},{\"media_key\":\"7_2\",\"type\":\"video\",\"preview_image_url\":\"https://pbs.twimg.com/ext/v.jpg\",\"duration_ms\":12345,\"width\":1920,\"height\":1080,\"public_metrics\":{\"view_count\":42},\"variants\":[{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/v.m3u8\"},{\"content_type\":\"video/mp4\",\"bit_rate\":832000,\"url\":\"https://video.twimg.com/low.mp4\"},{\"content_type\":\"video/mp4\",\"bit_rate\":2176000,\"url\":\"https://video.twimg.com/high.mp4\"}]}],\"tweets\":[{\"id\":\"21\",\"text\":\"quoted 🎉 post\",\"author_id\":\"13\",\"created_at\":\"2006-03-21T20:40:00.000Z\",\"referenced_tweets\":[{\"type\":\"replied_to\",\"id\":\"1\"}]}],\"polls\":[{\"id\":\"p1\",\"options\":[{\"position\":1,\"label\":\"yes\",\"votes\":3}],\"voting_status\":\"closed\"}]},\"meta\":{\"newest_id\":\"31\",\"oldest_id\":\"20\",\"result_count\":3,\"next_token\":\"b26v89c19zqg8o3fpdg\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/spaces/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"1DXxyRYNejbKM\",\"title\":\"Rust Space\",\"state\":\"scheduled\",\"scheduled_start\":\"2026-02-01T00:00:00.000Z\",\"is_ticketed\":true}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/spaces",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1DXxyRYNejbKM\",\"title\":\"Rust Space\",\"state\":\"live\",\"creator_id\":\"12\",\"host_ids\":[\"12\"],\"participant_count\":99,\"lang\":\"en\",\"is_ticketed\":false,\"started_at\":\"2026-01-01T00:00:00.000Z\"}],\"meta\":{\"result_count\":1}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/trends/by/woeid/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"trend_name\":\"#Rust\",\"tweet_count\":12000},{\"trend_name\":\"Ferris & Co\",\"tweet_count\":300}]}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/dm_conversations/with/*/messages",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"dm_conversation_id\":\"100-12\",\"dm_event_id\":\"1580705921830768643\"}}"
+      },
+      {
+        "method": "POST",
+        "path": "/2/dm_conversations/*/messages",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"dm_conversation_id\":\"100-12\",\"dm_event_id\":\"1580705921830768643\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/dm_conversations/with/*/dm_events",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1580705921830768643\",\"event_type\":\"MessageCreate\",\"text\":\"hi there\",\"sender_id\":\"100\",\"dm_conversation_id\":\"100-12\",\"created_at\":\"2022-10-14T00:00:00.000Z\",\"attachments\":{\"media_keys\":[\"3_9\"]}},{\"id\":\"1580705921830768644\",\"event_type\":\"ParticipantsJoin\",\"dm_conversation_id\":\"100-12\"}],\"includes\":{\"media\":[{\"media_key\":\"3_9\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/dm/x.jpg\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"dmnt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/dm_conversations/*/dm_events",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1580705921830768643\",\"event_type\":\"MessageCreate\",\"text\":\"hi there\",\"sender_id\":\"100\",\"dm_conversation_id\":\"100-12\",\"created_at\":\"2022-10-14T00:00:00.000Z\",\"attachments\":{\"media_keys\":[\"3_9\"]}},{\"id\":\"1580705921830768644\",\"event_type\":\"ParticipantsJoin\",\"dm_conversation_id\":\"100-12\"}],\"includes\":{\"media\":[{\"media_key\":\"3_9\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/dm/x.jpg\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"dmnt\"}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/dm_events",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":[{\"id\":\"1580705921830768643\",\"event_type\":\"MessageCreate\",\"text\":\"hi there\",\"sender_id\":\"100\",\"dm_conversation_id\":\"100-12\",\"created_at\":\"2022-10-14T00:00:00.000Z\",\"attachments\":{\"media_keys\":[\"3_9\"]}},{\"id\":\"1580705921830768644\",\"event_type\":\"ParticipantsJoin\",\"dm_conversation_id\":\"100-12\"}],\"includes\":{\"media\":[{\"media_key\":\"3_9\",\"type\":\"photo\",\"url\":\"https://pbs.twimg.com/dm/x.jpg\"}]},\"meta\":{\"result_count\":2,\"next_token\":\"dmnt\"}}"
+      },
+      {
+        "method": "DELETE",
+        "path": "/2/dm_events/*",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"deleted\":true}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/usage/tweets",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"cap_reset_day\":19,\"project_cap\":\"1000000\",\"project_id\":\"1\",\"project_usage\":\"40\",\"daily_project_usage\":{\"project_id\":\"1\",\"usage\":[{\"date\":\"2026-01-01T00:00:00.000Z\",\"usage\":\"40\"}]}}}"
+      },
+      {
+        "method": "GET",
+        "path": "/2/media/upload",
+        "status": 200,
+        "content_type": "application/json",
+        "body": "{\"data\":{\"id\":\"1880028106020515840\",\"media_key\":\"3_1880028106020515840\",\"processing_info\":{\"state\":\"succeeded\",\"progress_percent\":100}}}"
+      }
+    ]
+  },
+  "recorded": [
+    "posts-get",
+    "posts-get-nomedia",
+    "posts-get-404",
+    "posts-get-401-user",
+    "posts-get-403-fallback",
+    "posts-get-429",
+    "posts-get-500",
+    "posts-get-rawtext",
+    "posts-get-bearer",
+    "posts-get-oauth1",
+    "posts-get-nocreds",
+    "posts-get-many",
+    "posts-search",
+    "posts-search-archive",
+    "posts-count",
+    "posts-count-archive",
+    "posts-thread",
+    "posts-likers",
+    "posts-reposters",
+    "posts-quotes",
+    "posts-create",
+    "posts-create-quote",
+    "posts-create-nouser",
+    "posts-create-oauth1",
+    "posts-thread-create",
+    "posts-thread-create-fail",
+    "posts-delete",
+    "posts-hide",
+    "posts-unhide",
+    "posts-readonly",
+    "posts-dryrun",
+    "posts-dryrun-thread",
+    "posts-dryrun-nocreds",
+    "posts-truncated",
+    "tl-home",
+    "tl-user-name",
+    "tl-user-id",
+    "tl-user-ghost",
+    "tl-mentions",
+    "tl-liked",
+    "tl-bookmarks",
+    "tl-home-nouser",
+    "users-me",
+    "users-get-name",
+    "users-get-id",
+    "users-get-404",
+    "users-get-none",
+    "users-get-many-names",
+    "users-get-many-ids",
+    "users-get-many-both",
+    "users-search",
+    "users-followers",
+    "users-following",
+    "users-follow",
+    "users-follow-notarget",
+    "users-unfollow",
+    "users-mute",
+    "users-unmute",
+    "users-block",
+    "users-unblock",
+    "users-muted",
+    "users-blocked",
+    "eng-like",
+    "eng-unlike",
+    "eng-repost",
+    "eng-unrepost",
+    "eng-bookmark",
+    "eng-unbookmark",
+    "lists-create",
+    "lists-create-min",
+    "lists-update",
+    "lists-update-empty",
+    "lists-delete",
+    "lists-get",
+    "lists-owned",
+    "lists-memberships",
+    "lists-pinned",
+    "lists-add",
+    "lists-remove",
+    "lists-posts",
+    "lists-members",
+    "lists-followers",
+    "lists-follow",
+    "lists-unfollow",
+    "spaces-search",
+    "spaces-search-all",
+    "spaces-get",
+    "spaces-get-many",
+    "spaces-posts",
+    "trends-loc",
+    "trends-default",
+    "trends-personal",
+    "dms-send",
+    "dms-send-notarget",
+    "dms-send-conv",
+    "dms-events",
+    "dms-conversation",
+    "dms-with-user",
+    "dms-delete",
+    "media-status",
+    "media-upload-none",
+    "media-upload-two",
+    "media-upload-badb64",
+    "media-upload-outside",
+    "media-upload-ext",
+    "media-upload-http",
+    "media-upload-private",
+    "media-view-none",
+    "media-view-nomedia",
+    "media-view-index",
+    "media-view-private",
+    "media-upload-readonly",
+    "meta-auth-full",
+    "meta-auth-none",
+    "meta-auth-oauth1-nocache",
+    "meta-rate",
+    "meta-rate-nocache",
+    "meta-usage",
+    "meta-usage-user",
+    "config-bad-bool",
+    "config-bad-toolset",
+    "cli-unknown",
+    "cli-logout"
+  ]
+}

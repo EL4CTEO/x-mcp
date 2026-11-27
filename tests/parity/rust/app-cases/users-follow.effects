@@ -1,0 +1,6 @@
+http GET http://sink/2/users/me?user.fields=id
+http GET http://sink/2/users/by/username/jack?user.fields=id
+http POST http://sink/2/users/100/following
+content-type: application/json
+
+{"target_user_id":"12"}

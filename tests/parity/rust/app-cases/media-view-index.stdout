@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"media_index 3 is out of range: post 20 has 2 attachment(s).\"\n}"}],"structuredContent":{"error":"media_index 3 is out of range: post 20 has 2 attachment(s)."},"isError":true},"jsonrpc":"2.0","id":1}

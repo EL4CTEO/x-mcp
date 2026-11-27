@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"Refusing to download media from a local or private host (localhost).\"\n}"}],"structuredContent":{"error":"Refusing to download media from a local or private host (localhost)."},"isError":true},"jsonrpc":"2.0","id":1}

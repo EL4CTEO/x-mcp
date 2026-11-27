@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"sent\": true,\n  \"participant_id\": \"12\",\n  \"conversation_id\": \"100-12\",\n  \"event_id\": \"1580705921830768643\",\n  \"text\": \"ciao 👋\"\n}"}],"structuredContent":{"sent":true,"participant_id":"12","conversation_id":"100-12","event_id":"1580705921830768643","text":"ciao 👋"}},"jsonrpc":"2.0","id":1}

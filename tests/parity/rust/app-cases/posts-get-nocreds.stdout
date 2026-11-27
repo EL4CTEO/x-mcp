@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"No X credentials are configured.\",\n  \"code\": \"missing_app_auth\",\n  \"hint\": \"Set X_BEARER_TOKEN or run `x-mcp auth`.\"\n}"}],"structuredContent":{"error":"No X credentials are configured.","code":"missing_app_auth","hint":"Set X_BEARER_TOKEN or run `x-mcp auth`."},"isError":true},"jsonrpc":"2.0","id":1}

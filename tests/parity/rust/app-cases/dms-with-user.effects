@@ -1,0 +1,1 @@
+http GET http://sink/2/dm_conversations/with/12/dm_events?dm_event.fields=attachments%2Ccreated_at%2Cdm_conversation_id%2Cid%2Csender_id%2Ctext&expansions=attachments.media_keys%2Csender_id&media.fields=alt_text%2Cduration_ms%2Cheight%2Cmedia_key%2Cpreview_image_url%2Cpublic_metrics%2Ctype%2Curl%2Cvariants%2Cwidth&max_results=50

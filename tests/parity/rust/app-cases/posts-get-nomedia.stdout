@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"id\": \"22\",\n  \"url\": \"https://x.com/i/web/status/22\",\n  \"text\": \"plain\",\n  \"created_at\": \"[..]\"\n}"}],"structuredContent":{"id":"22","url":"https://x.com/i/web/status/22","text":"plain","created_at":"[..]"}},"jsonrpc":"2.0","id":1}

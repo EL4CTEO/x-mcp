@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"action\": \"unlike\",\n  \"at\": \"[..]\",\n  \"user_id\": \"100\",\n  \"tweet_id\": \"20\",\n  \"liked\": false\n}"}],"structuredContent":{"action":"unlike","at":"[..]","user_id":"100","tweet_id":"20","liked":false}},"jsonrpc":"2.0","id":1}

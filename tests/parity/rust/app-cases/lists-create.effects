@@ -1,0 +1,4 @@
+http POST http://sink/2/lists
+content-type: application/json
+
+{"name":"New list","description":"desc","private":true}

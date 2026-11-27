@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"id\": \"555\",\n  \"url\": \"https://x.com/i/status/555\",\n  \"text\": \"hello world\",\n  \"reply_to\": \"20\",\n  \"media_ids\": [\n    \"1\",\n    \"2\"\n  ]\n}"}],"structuredContent":{"id":"555","url":"https://x.com/i/status/555","text":"hello world","reply_to":"20","media_ids":["1","2"]}},"jsonrpc":"2.0","id":1}

@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"Provide exactly one of path, base64 or url.\"\n}"}],"structuredContent":{"error":"Provide exactly one of path, base64 or url."},"isError":true},"jsonrpc":"2.0","id":1}

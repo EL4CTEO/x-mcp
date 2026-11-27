@@ -1,0 +1,1 @@
+http GET http://sink/2/trends/by/woeid/1?max_trends=20&trend.fields=trend_name%2Ctweet_count

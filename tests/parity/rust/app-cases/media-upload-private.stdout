@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"error\": \"Refusing to download media from a private address (127.0.0.1).\"\n}"}],"structuredContent":{"error":"Refusing to download media from a private address (127.0.0.1)."},"isError":true},"jsonrpc":"2.0","id":1}

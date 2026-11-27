@@ -1,0 +1,4 @@
+http PUT http://sink/2/tweets/30/hidden
+content-type: application/json
+
+{"hidden":true}

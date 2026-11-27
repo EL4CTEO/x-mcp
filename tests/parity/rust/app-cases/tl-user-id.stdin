@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"x_timelines","arguments":{"action":"user","user_id":"12","start_time":"2026-01-01T00:00:00Z","end_time":"2026-01-02T00:00:00Z"}}}

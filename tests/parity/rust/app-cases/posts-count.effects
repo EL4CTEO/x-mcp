@@ -1,0 +1,1 @@
+http GET http://sink/2/tweets/counts/recent?query=%23rust&granularity=day

@@ -1,0 +1,1 @@
+{"result":{"content":[{"type":"text","text":"{\n  \"id\": \"1235\",\n  \"name\": \"New list\",\n  \"private\": false,\n  \"url\": \"https://x.com/i/lists/1235\"\n}"}],"structuredContent":{"id":"1235","name":"New list","private":false,"url":"https://x.com/i/lists/1235"}},"jsonrpc":"2.0","id":1}

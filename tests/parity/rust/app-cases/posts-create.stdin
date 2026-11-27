@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"x_posts","arguments":{"action":"create","text":"hello world ✨","reply_to":"20","media_ids":["1","2"],"poll":{"options":["a","b"],"duration_minutes":60},"reply_settings":"following","made_with_ai":true}}}

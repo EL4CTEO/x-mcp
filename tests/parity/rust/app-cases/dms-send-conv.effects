@@ -1,0 +1,4 @@
+http POST http://sink/2/dm_conversations/100-12/messages
+content-type: application/json
+
+{"text":"hey"}
